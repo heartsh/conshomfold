@@ -85,8 +85,8 @@ fn main() {
     for subsubstring in &substrings[1 ..] {
       let subsubsubstrings = subsubstring.split(",").collect::<Vec<&str>>();
       bpp_mats[rna_id].insert((
-        subsubsubstrings[0].parse().expect("Failed to parse an index."),
-        subsubsubstrings[1].parse().expect("Failed to parse an index.")),
+        subsubsubstrings[0].parse::<Pos>().expect("Failed to parse an index.") + 1,
+        subsubsubstrings[1].parse::<Pos>().expect("Failed to parse an index.") + 1),
         subsubsubstrings[2].parse().expect("Failed to parse a base-pairing probability."),
       );
     }

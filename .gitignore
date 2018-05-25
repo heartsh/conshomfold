@@ -4,6 +4,7 @@ target
 !*.rs
 !*.py
 !assets/rna_families/*
+!assets/sampled_rna_families/*
 !Cargo.toml
 !.gitignore
 !README.md
