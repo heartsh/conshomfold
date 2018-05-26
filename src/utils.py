@@ -13,17 +13,6 @@ def get_dir_paths():
   conda_program_dir_path = "/usr/local/ancnd/envs/rsrch" if current_work_dir_path.find("/home/masaki") == -1 else "/home/masaki/prgrms/ancnd/envs/rsrch"
   return (current_work_dir_path, asset_dir_path, program_dir_path, conda_program_dir_path)
 
-def init_matplotlib(): 
-  params = {
-    "legend.fontsize": "x-large",
-    "axes.labelsize": "x-large",
-    "axes.titlesize":"x-large",
-    "xtick.labelsize":"x-large",
-    "ytick.labelsize":"x-large"
-  }
-  pylab.rcParams.update(params)
-  matplotlib.rcParams['ps.fonttype'] = 42
-
 def get_ss(ss_string):
   ss = {}
   stack = []
