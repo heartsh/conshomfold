@@ -25,7 +25,7 @@ def main():
     os.mkdir(centroidhomfold_dir_path)
   rna_dir_path = asset_dir_path + "/sampled_rna_families"
   bpp_mat_file = "bpp_mats_on_sta.dat"
-  gammas = [2. ** i for i in range(-10, 11)]
+  gammas = [2. ** i for i in range(-7, 11)]
   parasor_params = []
   centroidhomfold_params = []
   strap_and_neofold_elapsed_time = 0.
