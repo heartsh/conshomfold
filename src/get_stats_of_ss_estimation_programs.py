@@ -23,9 +23,6 @@ def main():
   centroidhomfold_ppvs = []
   centroidhomfold_senss = []
   gammas = [2. ** i for i in range(-7, 11)]
-  (neofold_total_tp, neofold_total_tn, neofold_total_fp, neofold_total_fn) = (0, 0, 0, 0)
-  (parasor_total_tp, parasor_total_tn, parasor_total_fp, parasor_total_fn) = (0, 0, 0, 0)
-  (centroidhomfold_total_tp, centroidhomfold_total_tn, centroidhomfold_total_fp, centroidhomfold_total_fn) = (0, 0, 0, 0)
   for gamma in gammas:
     gamma_str = str(gamma)
     neofold_tp = neofold_tn = neofold_fp = neofold_fn = 0.
@@ -99,26 +96,14 @@ def main():
                 centroidhomfold_fp += 1
               else:
                 centroidhomfold_fn += 1
-    neofold_total_tp += neofold_tp
-    neofold_total_tn += neofold_tn
-    neofold_total_fp += neofold_fp
-    neofold_total_fn += neofold_fn
     ppv = neofold_tp / (neofold_tp + neofold_fp)
     sens = neofold_tp / (neofold_tp + neofold_fn)
     neofold_ppvs.insert(0, ppv)
     neofold_senss.insert(0, sens)
-    parasor_total_tp += parasor_tp
-    parasor_total_tn += parasor_tn
-    parasor_total_fp += parasor_fp
-    parasor_total_fn += parasor_fn
     ppv = parasor_tp / (parasor_tp + parasor_fp)
     sens = parasor_tp / (parasor_tp + parasor_fn)
     parasor_ppvs.insert(0, ppv)
     parasor_senss.insert(0, sens)
-    centroidhomfold_total_tp += centroidhomfold_tp
-    centroidhomfold_total_tn += centroidhomfold_tn
-    centroidhomfold_total_fp += centroidhomfold_fp
-    centroidhomfold_total_fn += centroidhomfold_fn
     ppv = centroidhomfold_tp / (centroidhomfold_tp + centroidhomfold_fp)
     sens = centroidhomfold_tp / (centroidhomfold_tp + centroidhomfold_fn)
     centroidhomfold_ppvs.insert(0, ppv)
@@ -132,15 +117,12 @@ def main():
   line_1, = pyplot.plot(neofold_ppvs, neofold_senss, label = "NeoFold", marker = "o", linestyle = "-")
   line_2, = pyplot.plot(parasor_ppvs, parasor_senss, label = "ParasoR", marker = "v", linestyle = "-")
   line_3, = pyplot.plot(centroidhomfold_ppvs, centroidhomfold_senss, label = "CentroidHomFold", marker = "s", linestyle = "-")
-  pyplot.xlabel("PPV")
-  pyplot.ylabel("Sensitivity")
+  pyplot.xlabel("A PPV")
+  pyplot.ylabel("A sensitivity")
   pyplot.legend(handles = [line_1, line_2, line_3], loc = 1)
   neofold_mcc = (neofold_total_tp * neofold_total_tn - neofold_total_fp * neofold_total_fn) / math.sqrt((neofold_total_tp + neofold_total_fp) * (neofold_total_tp + neofold_total_fn) * (neofold_total_tn + neofold_total_fp) * (neofold_total_tn + neofold_total_fn))
   parasor_mcc = (parasor_total_tp * parasor_total_tn - parasor_total_fp * parasor_total_fn) / math.sqrt((parasor_total_tp + parasor_total_fp) * (parasor_total_tp + parasor_total_fn) * (parasor_total_tn + parasor_total_fp) * (parasor_total_tn + parasor_total_fn))
   centroidhomfold_mcc = (centroidhomfold_total_tp * centroidhomfold_total_tn - centroidhomfold_total_fp * centroidhomfold_total_fn) / math.sqrt((centroidhomfold_total_tp + centroidhomfold_total_fp) * (centroidhomfold_total_tp + centroidhomfold_total_fn) * (centroidhomfold_total_tn + centroidhomfold_total_fp) * (centroidhomfold_total_tn + centroidhomfold_total_fn))
-  print("The MCC of the NeoFold program for a test dataset = %f." % neofold_mcc)
-  print("The MCC of the ParasoR program for a test dataset = %f." % parasor_mcc)
-  print("The MCC of the CentroidHomFold program for a test dataset = %f." % centroidhomfold_mcc)
   image_dir_path = asset_dir_path + "/images"
   if not os.path.exists(image_dir_path):
     os.mkdir(image_dir_path)
