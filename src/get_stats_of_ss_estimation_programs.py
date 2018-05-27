@@ -120,9 +120,6 @@ def main():
   pyplot.xlabel("A PPV")
   pyplot.ylabel("A sensitivity")
   pyplot.legend(handles = [line_1, line_2, line_3], loc = 1)
-  neofold_mcc = (neofold_total_tp * neofold_total_tn - neofold_total_fp * neofold_total_fn) / math.sqrt((neofold_total_tp + neofold_total_fp) * (neofold_total_tp + neofold_total_fn) * (neofold_total_tn + neofold_total_fp) * (neofold_total_tn + neofold_total_fn))
-  parasor_mcc = (parasor_total_tp * parasor_total_tn - parasor_total_fp * parasor_total_fn) / math.sqrt((parasor_total_tp + parasor_total_fp) * (parasor_total_tp + parasor_total_fn) * (parasor_total_tn + parasor_total_fp) * (parasor_total_tn + parasor_total_fn))
-  centroidhomfold_mcc = (centroidhomfold_total_tp * centroidhomfold_total_tn - centroidhomfold_total_fp * centroidhomfold_total_fn) / math.sqrt((centroidhomfold_total_tp + centroidhomfold_total_fp) * (centroidhomfold_total_tp + centroidhomfold_total_fn) * (centroidhomfold_total_tn + centroidhomfold_total_fp) * (centroidhomfold_total_tn + centroidhomfold_total_fn))
   image_dir_path = asset_dir_path + "/images"
   if not os.path.exists(image_dir_path):
     os.mkdir(image_dir_path)
