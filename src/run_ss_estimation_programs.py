@@ -35,7 +35,7 @@ def main():
     rna_file_path = os.path.join(rna_dir_path, rna_file)
     (rna_familiy_name, extension) = os.path.splitext(rna_file)
     strap_output_dir_path = os.path.join(strap_dir_path, rna_familiy_name)
-    strap_command = "strap --max_base_pairing_span 1000 --num_of_times_of_improvements_of_stapmqs 0 -i " + rna_file_path + " -o " + strap_output_dir_path
+    strap_command = "strap --max_base_pairing_span 1000 --num_of_times_of_improvements_of_struct_align_prob_mat_quadruples 0 -i " + rna_file_path + " -o " + strap_output_dir_path
     begin = time.time()
     utils.run_command(strap_command)
     elapsed_time = time.time() - begin

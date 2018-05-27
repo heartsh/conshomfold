@@ -2,7 +2,7 @@
 name = "neofold"
 version = "0.1.0"
 authors = ["heartsh <heartsh@heartsh.io>"]
-description = "NeoFold Program, RNA Secondary-structure Estimation Program Incorporating Homologous-RNA-sequences"
+description = "NeoFold Program, Program for Maximum-expected-accuracy Estimations of RNA Secondary Structures by Incorporating Homologous-RNA sequences"
 
 [dependencies]
 bio-seq-algos = "0.1"
