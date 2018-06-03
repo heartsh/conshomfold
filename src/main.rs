@@ -66,7 +66,7 @@ fn main() {
     let fasta_record = fasta_record.expect("Failed to read a FASTA record.");
     let seq = unsafe {from_utf8_unchecked(fasta_record.seq()).to_uppercase().as_bytes().iter().filter(|&&base| {is_rna_base(base)}).map(|&base| {base}).collect::<Seq>()};
     let seq_len = seq.len();
-    fasta_records.push((String::from(fasta_record.id().expect("Failed to get the ID of a FASTA record.")), seq, seq_len));
+    fasta_records.push((String::from(fasta_record.id()), seq, seq_len));
   }
   let num_of_fasta_records = fasta_records.len();
   let mut bpp_mats = vec![SparseProbMat::default(); num_of_fasta_records];
