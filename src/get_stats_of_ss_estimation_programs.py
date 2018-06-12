@@ -117,8 +117,8 @@ def main():
   line_1, = pyplot.plot(neofold_ppvs, neofold_senss, label = "NeoFold", marker = "o", linestyle = "-")
   line_2, = pyplot.plot(parasor_ppvs, parasor_senss, label = "ParasoR", marker = "v", linestyle = "-")
   line_3, = pyplot.plot(centroidhomfold_ppvs, centroidhomfold_senss, label = "CentroidHomFold", marker = "s", linestyle = "-")
-  pyplot.xlabel("A PPV")
-  pyplot.ylabel("A sensitivity")
+  pyplot.xlabel("PPV")
+  pyplot.ylabel("Sensitivity")
   pyplot.legend(handles = [line_1, line_2, line_3], loc = 1)
   image_dir_path = asset_dir_path + "/images"
   if not os.path.exists(image_dir_path):
