@@ -64,39 +64,37 @@ def main():
       centroidhomfold_output_file_path = os.path.join(centroidhomfold_output_dir_path, output_file)
       centroidhomfold_params.insert(0, (rna_file_path, centroidhomfold_output_file_path, gamma_str))
   pool = multiprocessing.Pool(multiprocessing.cpu_count())
-  parasor_elapsed_time = sum(pool.map(run_parasor, parasor_params))
-  centroidhomfold_elapsed_time = sum(pool.map(run_centroidhomfold, centroidhomfold_params))
-  print("The elapsed time of the STRAP program and NeoFold program for a test set = %f[s]." % strap_and_neofold_elapsed_time)
-  print("The elapsed time of the ParasoR program for a test set = %f[s]." % parasor_elapsed_time)
-  print("The elapsed time of the CentroidHomFold program for a test set = %f[s]." % centroidhomfold_elapsed_time)
+  begin = time.time()
+  pool.map(run_parasor, parasor_params)
+  parasor_elapsed_time = time.time() - begin
+  begin = time.time()
+  pool.map(run_centroidhomfold, centroidhomfold_params)
+  centroidhomfold_elapsed_time = time.time() - begin
+  print("The elapsed time of the STRAP program and NeoFold program for a test set = %f [s]." % strap_and_neofold_elapsed_time)
+  print("The elapsed time of the ParasoR program for a test set = %f [s]." % parasor_elapsed_time)
+  print("The elapsed time of the CentroidHomFold program for a test set = %f [s]." % centroidhomfold_elapsed_time)
 
 def run_parasor(parasor_params):
   (rna_file_path, gamma, parasor_output_file_path) = parasor_params
   parasor_command = "ParasoR --pre --constraint 1000 --struct=%f --input " % gamma + rna_file_path
-  begin = time.time()
   (output, _, _) = utils.run_command(parasor_command)
-  elapsed_time = time.time() - begin
   lines = [line[10 :] for line in str(output).split("\\n") if line.startswith("#structure ")]
   parasor_output_file = open(parasor_output_file_path, "w+")
   parasor_output_buf = ""
   for (i, line) in enumerate(lines):
     parasor_output_buf += ">%d\n%s\n\n" % (i, line)
   parasor_output_file.write(parasor_output_buf)
-  return elapsed_time
 
 def run_centroidhomfold(centroidhomfold_params):
   (rna_file_path, centroidhomfold_output_file_path, gamma_str) = centroidhomfold_params
   centroidhomfold_command = "centroid_homfold " + rna_file_path + " -H " + rna_file_path + " -g " + gamma_str
-  begin = time.time()
   (output, _, _) = utils.run_command(centroidhomfold_command)
-  elapsed_time = time.time() - begin
   lines = [line.split()[0] for (i, line) in enumerate(str(output).split("\\n")) if i % 3 == 2]
   centroidhomfold_output_file = open(centroidhomfold_output_file_path, "w+")
   centroidhomfold_output_buf = ""
   for (i, line) in enumerate(lines):
     centroidhomfold_output_buf += ">%d\n%s\n\n" % (i, line)
   centroidhomfold_output_file.write(centroidhomfold_output_buf)
-  return elapsed_time
 
 if __name__ == "__main__":
   main()
