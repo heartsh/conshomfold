@@ -150,7 +150,7 @@ def main():
   line_4, = pyplot.plot(turbofold_ppvs, turbofold_senss, label = "TurboFold", marker = "p", linestyle = "-")
   pyplot.xlabel("PPV")
   pyplot.ylabel("Sensitivity")
-  pyplot.legend(handles = [line_1, line_2, line_3], loc = 1)
+  pyplot.legend(handles = [line_1, line_2, line_3, line_4], loc = 1)
   image_dir_path = asset_dir_path + "/images"
   if not os.path.exists(image_dir_path):
     os.mkdir(image_dir_path)
