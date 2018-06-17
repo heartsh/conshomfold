@@ -114,7 +114,7 @@ def main():
   print("The elapsed time of the STRAP program and NeoFold program for a test set = %f [s]." % strap_and_neofold_elapsed_time)
   print("The elapsed time of the ParasoR program for a test set = %f [s]." % parasor_elapsed_time)
   print("The elapsed time of the CentroidHomFold program for a test set = %f [s]." % centroidhomfold_elapsed_time)
-  print("The elapsed time of the TurboFold program for a test set = %f [s]." % turbofold_elapsed_time)
+  print("The elapsed time of the TurboFold-smp program for a test set = %f [s]." % turbofold_elapsed_time)
 
 def run_parasor(parasor_params):
   (rna_file_path, gamma, parasor_output_file_path) = parasor_params

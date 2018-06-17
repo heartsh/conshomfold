@@ -147,7 +147,7 @@ def main():
   line_1, = pyplot.plot(neofold_ppvs, neofold_senss, label = "NeoFold", marker = "o", linestyle = "-")
   line_2, = pyplot.plot(parasor_ppvs, parasor_senss, label = "ParasoR", marker = "v", linestyle = "-")
   line_3, = pyplot.plot(centroidhomfold_ppvs, centroidhomfold_senss, label = "CentroidHomFold", marker = "s", linestyle = "-")
-  line_4, = pyplot.plot(turbofold_ppvs, turbofold_senss, label = "TurboFold", marker = "p", linestyle = "-")
+  line_4, = pyplot.plot(turbofold_ppvs, turbofold_senss, label = "TurboFold-smp", marker = "p", linestyle = "-")
   pyplot.xlabel("PPV")
   pyplot.ylabel("Sensitivity")
   pyplot.legend(handles = [line_1, line_2, line_3, line_4], loc = 1)
