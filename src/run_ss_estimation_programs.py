@@ -84,7 +84,7 @@ def main():
       turbofold_config_file_contents += "}\nOutCT = {"
       for i in range(rec_seq_len):
         turbofold_config_file_contents += "%s/%d.ct;" % (temp_dir_path, i)
-      turbofold_config_file_contents += "}\nIterations = 1\nMode = MEA\nMeaGamma = %f\nProcessors = %d" % (gamma, num_of_threads)
+      turbofold_config_file_contents += "}\nMaximumPairingDistance = 400\nIterations = 1\nMode = MEA\nMeaGamma = %f\nProcessors = %d" % (gamma, num_of_threads)
       turbofold_config_file_path = os.path.join(temp_dir_path, "turbofold_config.dat")
       turbofold_config_file = open(turbofold_config_file_path, "w")
       turbofold_config_file.write(turbofold_config_file_contents)
