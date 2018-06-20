@@ -45,7 +45,7 @@ def main():
     rna_file_path = os.path.join(rna_dir_path, rna_file)
     (rna_familiy_name, extension) = os.path.splitext(rna_file)
     strap_output_dir_path = os.path.join(strap_dir_path, rna_familiy_name)
-    strap_command = "strap --max_base_pairing_span 1000 --num_of_times_of_improvements_of_struct_align_prob_mat_quadruples 0 -i " + rna_file_path + " -o " + strap_output_dir_path
+    strap_command = "strap --num_of_times_of_improvements_of_struct_align_prob_mat_quadruples 0 -i " + rna_file_path + " -o " + strap_output_dir_path
     begin = time.time()
     utils.run_command(strap_command)
     elapsed_time = time.time() - begin
@@ -84,7 +84,7 @@ def main():
       turbofold_config_file_contents += "}\nOutCT = {"
       for i in range(rec_seq_len):
         turbofold_config_file_contents += "%s/%d.ct;" % (temp_dir_path, i)
-      turbofold_config_file_contents += "}\nMaximumPairingDistance = 400\nIterations = 1\nMode = MEA\nMeaGamma = %f\nProcessors = %d" % (gamma, num_of_threads)
+      turbofold_config_file_contents += "}\nIterations = 1\nMode = MEA\nMeaGamma = %f\nProcessors = %d" % (gamma, num_of_threads)
       turbofold_config_file_path = os.path.join(temp_dir_path, "turbofold_config.dat")
       turbofold_config_file = open(turbofold_config_file_path, "w")
       turbofold_config_file.write(turbofold_config_file_contents)
@@ -118,7 +118,7 @@ def main():
 
 def run_parasor(parasor_params):
   (rna_file_path, gamma, parasor_output_file_path) = parasor_params
-  parasor_command = "ParasoR --pre --constraint 1000 --struct=%f --input " % gamma + rna_file_path
+  parasor_command = "ParasoR --pre --constraint 0 --struct=%f --input " % gamma + rna_file_path
   (output, _, _) = utils.run_command(parasor_command)
   lines = [line[10 :] for line in str(output).split("\\n") if line.startswith("#structure ")]
   parasor_output_file = open(parasor_output_file_path, "w+")
@@ -149,6 +149,8 @@ def read_ct_file(ct_file_path):
   ss_string = ["." for i in range(seq_len)]
   num_of_lines = len(lines)
   for line in lines[1 : num_of_lines]:
+    if "ENERGY" in line:
+      break
     substrings = line.split()
     index_1 = int(substrings[0])
     index_2 = int(substrings[4])
