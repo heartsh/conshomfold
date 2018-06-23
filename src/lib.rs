@@ -54,10 +54,10 @@ pub fn neofold(bpp_mat: &SparseProbMat, seq_len: usize, gamma_plus_1: Prob) -> M
   let mut pos_pair_stack = vec![pseudo_pos_pair];
   while pos_pair_stack.len() > 0 {
     let pos_pair_1 = pos_pair_stack.pop().expect("Failed to pop an element of a vector.");
-    let mea = mea_mat_4_bp_pos_pairs[&pos_pair_1];
-    if mea == 0. {continue;}
     let meas_4_bp_pos_pair = get_meas_4_bp_pos_pair(&pos_pair_1, &mea_mat_4_bp_pos_pairs, &pos_seqs_with_poss_4_forward_bps);
     let (i, j) = pos_pair_1;
+    let mea = meas_4_bp_pos_pair[j - i - 1];
+    if mea == 0. {continue;}
     let mut n = j - 1;
     while meas_4_bp_pos_pair[n - i] > 0. {
       let mea = meas_4_bp_pos_pair[n - i];
