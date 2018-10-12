@@ -1,6 +1,6 @@
-extern crate strap;
+extern crate stem;
 
-pub use strap::*;
+pub use stem::*;
 
 pub type Mea = Prob;
 #[derive(Clone)]
@@ -10,6 +10,10 @@ pub struct MeaSs {
 }
 type Meas = Vec<Mea>;
 type MeaMat = HashMap<PosPair, Mea, Hasher>;
+type Poss = Vec<Pos>;
+type PosSeqsWithPoss = HashMap<Pos, Poss, Hasher>;
+type PosPairs = Vec<PosPair>;
+type PosPairSeqsWithPosPairs = HashMap<PosPair, PosPairs, Hasher>;
 
 impl MeaSs {
   pub fn new() -> MeaSs {

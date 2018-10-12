@@ -14,14 +14,14 @@ import shutil
 def main():
   (current_work_dir_path, asset_dir_path, program_dir_path, conda_program_dir_path) = utils.get_dir_paths()
   num_of_threads = multiprocessing.cpu_count()
-  strap_dir_path = asset_dir_path + "/strap"
+  stem_dir_path = asset_dir_path + "/stem"
   neofold_dir_path = asset_dir_path + "/neofold"
   parasor_dir_path = asset_dir_path + "/parasor"
   centroidhomfold_dir_path = asset_dir_path + "/centroidhomfold"
   turbofold_dir_path = asset_dir_path + "/turbofold"
   temp_dir_path = "/tmp/run_ss_estimation_programs_%s" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
-  if not os.path.isdir(strap_dir_path):
-    os.mkdir(strap_dir_path)
+  if not os.path.isdir(stem_dir_path):
+    os.mkdir(stem_dir_path)
   if not os.path.isdir(neofold_dir_path):
     os.mkdir(neofold_dir_path)
   if not os.path.isdir(parasor_dir_path):
@@ -37,20 +37,22 @@ def main():
   gammas = [2. ** i for i in range(-7, 11)]
   parasor_params = []
   centroidhomfold_params = []
-  strap_and_neofold_elapsed_time = 0.
+  parasor_params_4_elapsed_time = []
+  centroidhomfold_params_4_elapsed_time = []
+  stem_and_neofold_elapsed_time = 0.
   turbofold_elapsed_time = 0.
   for rna_file in os.listdir(rna_dir_path):
     if not rna_file.endswith(".fa"):
       continue
     rna_file_path = os.path.join(rna_dir_path, rna_file)
     (rna_familiy_name, extension) = os.path.splitext(rna_file)
-    strap_output_dir_path = os.path.join(strap_dir_path, rna_familiy_name)
-    strap_command = "strap --num_of_times_of_improvements_of_struct_align_prob_mat_quadruples 0 -i " + rna_file_path + " -o " + strap_output_dir_path
+    stem_output_dir_path = os.path.join(stem_dir_path, rna_familiy_name)
+    stem_command = "stem -i " + rna_file_path + " -o " + stem_output_dir_path
     begin = time.time()
-    utils.run_command(strap_command)
+    utils.run_command(stem_command)
     elapsed_time = time.time() - begin
-    strap_and_neofold_elapsed_time += elapsed_time
-    bpp_mat_file_path = os.path.join(strap_output_dir_path, bpp_mat_file)
+    stem_and_neofold_elapsed_time += elapsed_time
+    bpp_mat_file_path = os.path.join(stem_output_dir_path, bpp_mat_file)
     neofold_output_dir_path = os.path.join(neofold_dir_path, "sss_of_" + rna_familiy_name)
     parasor_output_dir_path = os.path.join(parasor_dir_path, "sss_of_" + rna_familiy_name)
     centroidhomfold_output_dir_path = os.path.join(centroidhomfold_dir_path, "sss_of_" + rna_familiy_name)
@@ -71,11 +73,16 @@ def main():
       begin = time.time()
       utils.run_command(neofold_command)
       elapsed_time = time.time() - begin
-      strap_and_neofold_elapsed_time += elapsed_time
+      if gamma == 1:
+        stem_and_neofold_elapsed_time += elapsed_time
       parasor_output_file_path = os.path.join(parasor_output_dir_path, output_file)
       parasor_params.insert(0, (rna_file_path, gamma, parasor_output_file_path))
+      if gamma == 1:
+        parasor_params_4_elapsed_time.insert(0, (rna_file_path, gamma, parasor_output_file_path))
       centroidhomfold_output_file_path = os.path.join(centroidhomfold_output_dir_path, output_file)
       centroidhomfold_params.insert(0, (rna_file_path, centroidhomfold_output_file_path, gamma_str))
+      if gamma == 1:
+        centroidhomfold_params_4_elapsed_time.insert(0, (rna_file_path, centroidhomfold_output_file_path, gamma_str))
       recs = [rec for rec in SeqIO.parse(rna_file_path, "fasta")]
       rec_seq_len = len(recs)
       turbofold_config_file_contents = "InSeq = {"
@@ -94,7 +101,8 @@ def main():
       begin = time.time()
       run_turbofold(turbofold_config_file_path)
       elapsed_time = time.time() - begin
-      turbofold_elapsed_time += elapsed_time
+      if gamma == 1:
+        turbofold_elapsed_time += elapsed_time
       turbofold_output_file_contents = ""
       for i in range(rec_seq_len):
         ct_file_path = os.path.join(temp_dir_path, "%d.ct" % i)
@@ -106,12 +114,12 @@ def main():
   shutil.rmtree(temp_dir_path)
   pool = multiprocessing.Pool(num_of_threads)
   begin = time.time()
-  pool.map(run_parasor, parasor_params)
+  pool.map(run_parasor, parasor_params_4_elapsed_time)
   parasor_elapsed_time = time.time() - begin
   begin = time.time()
-  pool.map(run_centroidhomfold, centroidhomfold_params)
+  pool.map(run_centroidhomfold, centroidhomfold_params_4_elapsed_time)
   centroidhomfold_elapsed_time = time.time() - begin
-  print("The elapsed time of the STRAP program and NeoFold program for a test set = %f [s]." % strap_and_neofold_elapsed_time)
+  print("The elapsed time of the 3 STEM, ParasoR, and NeoFold programs for a test set = %f [s]." % stem_and_neofold_elapsed_time)
   print("The elapsed time of the ParasoR program for a test set = %f [s]." % parasor_elapsed_time)
   print("The elapsed time of the CentroidHomFold program for a test set = %f [s]." % centroidhomfold_elapsed_time)
   print("The elapsed time of the TurboFold-smp program for a test set = %f [s]." % turbofold_elapsed_time)
