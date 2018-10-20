@@ -1,9 +1,9 @@
 # NeoFold Program, Program for Maximum-expected-accuracy Estimations of RNA Secondary Structures with Incorporating Homologous-RNA sequences 
-This project provides the NeoFold Program, an program for maximum-expected-accuracy estimations of RNA secondary structures with incorporating homologous-RNA sequences.
+This project provides the NeoFold Program, a program for the maximum-expected-accuracy estimations of RNA secondary structures with incorporating homologous-RNA sequences.
 
 # Installation
 This project has been written in mainly Rust, a systems programming language.
-So first you need to install the Rust compiler, package manager, and standard library. 
+So first, you need to install the Rust compiler, package manager, and standard library. 
 Visit [the Rust website](https://www.rust-lang.org) to see more about this language.
 You can install these 3 components with 1 line as follows:
 ```bash
