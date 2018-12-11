@@ -144,7 +144,7 @@ def main():
   centroidhomfold_senss = numpy.array(centroidhomfold_senss)
   turbofold_ppvs = numpy.array(turbofold_ppvs) 
   turbofold_senss = numpy.array(turbofold_senss)
-  line_1, = pyplot.plot(neofold_ppvs, neofold_senss, label = "STEM + ParasoR + NeoFold", marker = "o", linestyle = "-")
+  line_1, = pyplot.plot(neofold_ppvs, neofold_senss, label = "STEM + McCaskill + NeoFold", marker = "o", linestyle = "-")
   line_2, = pyplot.plot(parasor_ppvs, parasor_senss, label = "ParasoR", marker = "v", linestyle = "-")
   line_3, = pyplot.plot(centroidhomfold_ppvs, centroidhomfold_senss, label = "CentroidHomFold", marker = "s", linestyle = "-")
   line_4, = pyplot.plot(turbofold_ppvs, turbofold_senss, label = "TurboFold-smp", marker = "p", linestyle = "-")
