@@ -78,12 +78,11 @@ def main():
       centroidfold_output_file_path = os.path.join(centroidfold_output_dir_path, output_file)
       centroidfold_params.insert(0, (rna_file_path, centroidfold_output_file_path, gamma_str))
       if gamma == 1:
-        centroidfold_params_4_elapsed_time.insert(0, (rna_file_path, gamma, centroidfold_output_file_path))
         centroidfold_params_4_elapsed_time.insert(0, (rna_file_path, centroidfold_output_file_path, gamma_str))
       centroidhomfold_output_file_path = os.path.join(centroidhomfold_output_dir_path, output_file)
-      centroidhomfold_params.insert(0, (rna_file_path, centroidhomfold_output_file_path, gamma_str))
+      centroidhomfold_params.insert(0, (rna_file_path, centroidhomfold_output_file_path, gamma_str, temp_dir_path))
       if gamma == 1:
-        centroidhomfold_params_4_elapsed_time.insert(0, (rna_file_path, centroidhomfold_output_file_path, gamma_str))
+        centroidhomfold_params_4_elapsed_time.insert(0, (rna_file_path, centroidhomfold_output_file_path, gamma_str, temp_dir_path))
       recs = [rec for rec in SeqIO.parse(rna_file_path, "fasta")]
       rec_seq_len = len(recs)
       turbofold_config_file_contents = "InSeq = {"
@@ -112,6 +111,7 @@ def main():
       turbofold_output_file_path = os.path.join(turbofold_output_dir_path, output_file)
       turbofold_output_file = open(turbofold_output_file_path, "w")
       turbofold_output_file.write(turbofold_output_file_contents)
+      turbofold_output_file.close()
   shutil.rmtree(temp_dir_path)
   pool = multiprocessing.Pool(num_of_threads)
   begin = time.time()
@@ -127,7 +127,7 @@ def main():
 
 def run_centroidfold(centroidfold_params):
   (rna_file_path, centroidfold_output_file_path, gamma_str) = centroidfold_params
-  centroidfold_command = "centroid_homfold " + rna_file_path + " -H " + rna_file_path + " -g " + gamma_str
+  centroidfold_command = "centroid_homfold " + rna_file_path + " -g " + gamma_str
   (output, _, _) = utils.run_command(centroidfold_command)
   lines = [line.split()[0] for (i, line) in enumerate(str(output).split("\\n")) if i % 3 == 2]
   centroidfold_output_file = open(centroidfold_output_file_path, "w+")
@@ -135,17 +135,26 @@ def run_centroidfold(centroidfold_params):
   for (i, line) in enumerate(lines):
     centroidfold_output_buf += ">%d\n%s\n\n" % (i, line)
   centroidfold_output_file.write(centroidfold_output_buf)
+  centroidfold_output_file.close()
 
 def run_centroidhomfold(centroidhomfold_params):
-  (rna_file_path, centroidhomfold_output_file_path, gamma_str) = centroidhomfold_params
-  centroidhomfold_command = "centroid_homfold " + rna_file_path + " -H " + rna_file_path + " -g " + gamma_str
-  (output, _, _) = utils.run_command(centroidhomfold_command)
-  lines = [line.split()[0] for (i, line) in enumerate(str(output).split("\\n")) if i % 3 == 2]
+  (rna_file_path, centroidhomfold_output_file_path, gamma_str, temp_dir_path) = centroidhomfold_params
+  recs = [rec for rec in SeqIO.parse(rna_file_path, "fasta")]
+  rec_seq_len = len(recs)
   centroidhomfold_output_file = open(centroidhomfold_output_file_path, "w+")
   centroidhomfold_output_buf = ""
-  for (i, line) in enumerate(lines):
-    centroidhomfold_output_buf += ">%d\n%s\n\n" % (i, line)
-  centroidhomfold_output_file.write(centroidhomfold_output_buf)
+  seq_file_path = os.path.join(temp_dir_path, "seqs.fa")
+  hom_seq_file_path = os.path.join(temp_dir_path, "hom_seqs.fa")
+  for (i, rec) in enumerate(recs):
+    SeqIO.write(rec, open(seq_file_path, "w"), "fasta")
+    for (j, rec) in enumerate(recs) if j != i:
+      SeqIO.write(rec, open(hom_seq_file_path, "a"), "fasta")
+    centroidhomfold_command = "centroid_homfold " + seq_file_path + " -H " + hom_seq_file_path + " -g " + gamma_str
+    (output, _, _) = utils.run_command(centroidhomfold_command)
+    open(hom_seq_file_path, "w")
+    centroidhomfold_output_buf += ">%d\n%s\n\n" % (i, str(output).split("\\n")[2].split()[0])
+    centroidhomfold_output_file.write(centroidhomfold_output_buf)
+  centroidhomfold_output_file.close()
 
 def run_turbofold(turbofold_config_file_path):
   turbofold_command = "TurboFold-smp " + turbofold_config_file_path
