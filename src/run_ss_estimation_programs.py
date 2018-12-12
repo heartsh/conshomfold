@@ -16,7 +16,7 @@ def main():
   num_of_threads = multiprocessing.cpu_count()
   stem_dir_path = asset_dir_path + "/stem"
   neofold_dir_path = asset_dir_path + "/neofold"
-  parasor_dir_path = asset_dir_path + "/parasor"
+  centroidfold_dir_path = asset_dir_path + "/centroidfold"
   centroidhomfold_dir_path = asset_dir_path + "/centroidhomfold"
   turbofold_dir_path = asset_dir_path + "/turbofold"
   temp_dir_path = "/tmp/run_ss_estimation_programs_%s" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
@@ -24,8 +24,8 @@ def main():
     os.mkdir(stem_dir_path)
   if not os.path.isdir(neofold_dir_path):
     os.mkdir(neofold_dir_path)
-  if not os.path.isdir(parasor_dir_path):
-    os.mkdir(parasor_dir_path)
+  if not os.path.isdir(centroidfold_dir_path):
+    os.mkdir(centroidfold_dir_path)
   if not os.path.isdir(centroidhomfold_dir_path):
     os.mkdir(centroidhomfold_dir_path)
   if not os.path.isdir(turbofold_dir_path):
@@ -35,9 +35,9 @@ def main():
   rna_dir_path = asset_dir_path + "/sampled_rna_families"
   bpp_mat_file = "bpp_mats_on_sta.dat"
   gammas = [2. ** i for i in range(-7, 11)]
-  parasor_params = []
+  centroidfold_params = []
   centroidhomfold_params = []
-  parasor_params_4_elapsed_time = []
+  centroidfold_params_4_elapsed_time = []
   centroidhomfold_params_4_elapsed_time = []
   stem_and_neofold_elapsed_time = 0.
   turbofold_elapsed_time = 0.
@@ -54,13 +54,13 @@ def main():
     stem_and_neofold_elapsed_time += elapsed_time
     bpp_mat_file_path = os.path.join(stem_output_dir_path, bpp_mat_file)
     neofold_output_dir_path = os.path.join(neofold_dir_path, "sss_of_" + rna_familiy_name)
-    parasor_output_dir_path = os.path.join(parasor_dir_path, "sss_of_" + rna_familiy_name)
+    centroidfold_output_dir_path = os.path.join(centroidfold_dir_path, "sss_of_" + rna_familiy_name)
     centroidhomfold_output_dir_path = os.path.join(centroidhomfold_dir_path, "sss_of_" + rna_familiy_name)
     turbofold_output_dir_path = os.path.join(turbofold_dir_path, "sss_of_" + rna_familiy_name)
     if not os.path.isdir(neofold_output_dir_path):
       os.mkdir(neofold_output_dir_path)
-    if not os.path.isdir(parasor_output_dir_path):
-      os.mkdir(parasor_output_dir_path)
+    if not os.path.isdir(centroidfold_output_dir_path):
+      os.mkdir(centroidfold_output_dir_path)
     if not os.path.isdir(centroidhomfold_output_dir_path):
       os.mkdir(centroidhomfold_output_dir_path)
     if not os.path.isdir(turbofold_output_dir_path):
@@ -75,10 +75,11 @@ def main():
       elapsed_time = time.time() - begin
       if gamma == 1:
         stem_and_neofold_elapsed_time += elapsed_time
-      parasor_output_file_path = os.path.join(parasor_output_dir_path, output_file)
-      parasor_params.insert(0, (rna_file_path, gamma, parasor_output_file_path))
+      centroidfold_output_file_path = os.path.join(centroidfold_output_dir_path, output_file)
+      centroidfold_params.insert(0, (rna_file_path, centroidfold_output_file_path, gamma_str))
       if gamma == 1:
-        parasor_params_4_elapsed_time.insert(0, (rna_file_path, gamma, parasor_output_file_path))
+        centroidfold_params_4_elapsed_time.insert(0, (rna_file_path, gamma, centroidfold_output_file_path))
+        centroidfold_params_4_elapsed_time.insert(0, (rna_file_path, centroidfold_output_file_path, gamma_str))
       centroidhomfold_output_file_path = os.path.join(centroidhomfold_output_dir_path, output_file)
       centroidhomfold_params.insert(0, (rna_file_path, centroidhomfold_output_file_path, gamma_str))
       if gamma == 1:
@@ -114,26 +115,26 @@ def main():
   shutil.rmtree(temp_dir_path)
   pool = multiprocessing.Pool(num_of_threads)
   begin = time.time()
-  pool.map(run_parasor, parasor_params_4_elapsed_time)
-  parasor_elapsed_time = time.time() - begin
+  pool.map(run_centroidfold, centroidfold_params_4_elapsed_time)
+  centroidfold_elapsed_time = time.time() - begin
   begin = time.time()
   pool.map(run_centroidhomfold, centroidhomfold_params_4_elapsed_time)
   centroidhomfold_elapsed_time = time.time() - begin
-  print("The elapsed time of the 3 STEM, ParasoR, and NeoFold programs for a test set = %f [s]." % stem_and_neofold_elapsed_time)
-  print("The elapsed time of the ParasoR program for a test set = %f [s]." % parasor_elapsed_time)
+  print("The elapsed time of the 3 STEM, McCaskill, and NeoFold programs for a test set = %f [s]." % stem_and_neofold_elapsed_time)
+  print("The elapsed time of the CentroidFold program for a test set = %f [s]." % centroidfold_elapsed_time)
   print("The elapsed time of the CentroidHomFold program for a test set = %f [s]." % centroidhomfold_elapsed_time)
   print("The elapsed time of the TurboFold-smp program for a test set = %f [s]." % turbofold_elapsed_time)
 
-def run_parasor(parasor_params):
-  (rna_file_path, gamma, parasor_output_file_path) = parasor_params
-  parasor_command = "ParasoR --pre --constraint 0 --struct=%f --input " % gamma + rna_file_path
-  (output, _, _) = utils.run_command(parasor_command)
-  lines = [line[10 :] for line in str(output).split("\\n") if line.startswith("#structure ")]
-  parasor_output_file = open(parasor_output_file_path, "w+")
-  parasor_output_buf = ""
+def run_centroidfold(centroidfold_params):
+  (rna_file_path, centroidfold_output_file_path, gamma_str) = centroidfold_params
+  centroidfold_command = "centroid_homfold " + rna_file_path + " -H " + rna_file_path + " -g " + gamma_str
+  (output, _, _) = utils.run_command(centroidfold_command)
+  lines = [line.split()[0] for (i, line) in enumerate(str(output).split("\\n")) if i % 3 == 2]
+  centroidfold_output_file = open(centroidfold_output_file_path, "w+")
+  centroidfold_output_buf = ""
   for (i, line) in enumerate(lines):
-    parasor_output_buf += ">%d\n%s\n\n" % (i, line)
-  parasor_output_file.write(parasor_output_buf)
+    centroidfold_output_buf += ">%d\n%s\n\n" % (i, line)
+  centroidfold_output_file.write(centroidfold_output_buf)
 
 def run_centroidhomfold(centroidhomfold_params):
   (rna_file_path, centroidhomfold_output_file_path, gamma_str) = centroidhomfold_params

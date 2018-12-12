@@ -13,14 +13,14 @@ import math
 def main():
   (current_work_dir_path, asset_dir_path, program_dir_path, conda_program_dir_path) = utils.get_dir_paths()
   neofold_ss_dir_path = asset_dir_path + "/neofold"
-  parasor_ss_dir_path = asset_dir_path + "/parasor"
+  centroidfold_ss_dir_path = asset_dir_path + "/centroidfold"
   centroidhomfold_ss_dir_path = asset_dir_path + "/centroidhomfold"
   turbofold_ss_dir_path = asset_dir_path + "/turbofold"
   rna_fam_dir_path = asset_dir_path + "/sampled_rna_families"
   neofold_ppvs = []
   neofold_senss = []
-  parasor_ppvs = []
-  parasor_senss = []
+  centroidfold_ppvs = []
+  centroidfold_senss = []
   centroidhomfold_ppvs = []
   centroidhomfold_senss = []
   turbofold_ppvs = []
@@ -29,7 +29,7 @@ def main():
   for gamma in gammas:
     gamma_str = str(gamma)
     neofold_tp = neofold_tn = neofold_fp = neofold_fn = 0.
-    parasor_tp = parasor_tn = parasor_fp = parasor_fn = 0.
+    centroidfold_tp = centroidfold_tn = centroidfold_fp = centroidfold_fn = 0.
     centroidhomfold_tp = centroidhomfold_tn = centroidhomfold_fp = centroidhomfold_fn = 0.
     turbofold_tp = turbofold_tn = turbofold_fp = turbofold_fn = 0.
     for rna_fam_file in os.listdir(rna_fam_dir_path):
@@ -43,8 +43,8 @@ def main():
       neofold_estimated_ss_dir_path = os.path.join(neofold_ss_dir_path, "sss_of_" + rna_fam_name)
       if not os.path.isdir(neofold_estimated_ss_dir_path):
         continue
-      parasor_estimated_ss_dir_path = os.path.join(parasor_ss_dir_path, "sss_of_" + rna_fam_name)
-      if not os.path.isdir(parasor_estimated_ss_dir_path):
+      centroidfold_estimated_ss_dir_path = os.path.join(centroidfold_ss_dir_path, "sss_of_" + rna_fam_name)
+      if not os.path.isdir(centroidfold_estimated_ss_dir_path):
         continue
       centroidhomfold_estimated_ss_dir_path = os.path.join(centroidhomfold_ss_dir_path, "sss_of_" + rna_fam_name)
       if not os.path.isdir(centroidhomfold_estimated_ss_dir_path):
@@ -69,8 +69,8 @@ def main():
                 neofold_fp += 1
               else:
                 neofold_fn += 1
-      parasor_estimated_ss_file_path = os.path.join(parasor_estimated_ss_dir_path, "gamma=" + gamma_str + ".dat")
-      estimated_sss = utils.get_sss(utils.get_ss_strings(parasor_estimated_ss_file_path))
+      centroidfold_estimated_ss_file_path = os.path.join(centroidfold_estimated_ss_dir_path, "gamma=" + gamma_str + ".dat")
+      estimated_sss = utils.get_sss(utils.get_ss_strings(centroidfold_estimated_ss_file_path))
       for (estimated_ss, ref_ss, rna_seq_len) in zip(estimated_sss, ref_sss, rna_seq_lens):
         for i in range(0, rna_seq_len):
           for j in range(i + 1, rna_seq_len):
@@ -78,14 +78,14 @@ def main():
             ref_bin = (i, j) in ref_ss
             if estimated_bin == ref_bin:
               if estimated_bin == True:
-                parasor_tp += 1
+                centroidfold_tp += 1
               else:
-                parasor_tn += 1
+                centroidfold_tn += 1
             else:
               if estimated_bin == True:
-                parasor_fp += 1
+                centroidfold_fp += 1
               else:
-                parasor_fn += 1
+                centroidfold_fn += 1
       centroidhomfold_estimated_ss_file_path = os.path.join(centroidhomfold_estimated_ss_dir_path, "gamma=" + gamma_str + ".dat")
       estimated_sss = utils.get_sss(utils.get_ss_strings(centroidhomfold_estimated_ss_file_path))
       for (estimated_ss, ref_ss, rna_seq_len) in zip(estimated_sss, ref_sss, rna_seq_lens):
@@ -124,10 +124,10 @@ def main():
     sens = neofold_tp / (neofold_tp + neofold_fn)
     neofold_ppvs.insert(0, ppv)
     neofold_senss.insert(0, sens)
-    ppv = parasor_tp / (parasor_tp + parasor_fp)
-    sens = parasor_tp / (parasor_tp + parasor_fn)
-    parasor_ppvs.insert(0, ppv)
-    parasor_senss.insert(0, sens)
+    ppv = centroidfold_tp / (centroidfold_tp + centroidfold_fp)
+    sens = centroidfold_tp / (centroidfold_tp + centroidfold_fn)
+    centroidfold_ppvs.insert(0, ppv)
+    centroidfold_senss.insert(0, sens)
     ppv = centroidhomfold_tp / (centroidhomfold_tp + centroidhomfold_fp)
     sens = centroidhomfold_tp / (centroidhomfold_tp + centroidhomfold_fn)
     centroidhomfold_ppvs.insert(0, ppv)
@@ -138,14 +138,14 @@ def main():
     turbofold_senss.insert(0, sens)
   neofold_ppvs = numpy.array(neofold_ppvs) 
   neofold_senss = numpy.array(neofold_senss)
-  parasor_ppvs = numpy.array(parasor_ppvs) 
-  parasor_senss = numpy.array(parasor_senss)
+  centroidfold_ppvs = numpy.array(centroidfold_ppvs) 
+  centroidfold_senss = numpy.array(centroidfold_senss)
   centroidhomfold_ppvs = numpy.array(centroidhomfold_ppvs) 
   centroidhomfold_senss = numpy.array(centroidhomfold_senss)
   turbofold_ppvs = numpy.array(turbofold_ppvs) 
   turbofold_senss = numpy.array(turbofold_senss)
   line_1, = pyplot.plot(neofold_ppvs, neofold_senss, label = "STEM + McCaskill + NeoFold", marker = "o", linestyle = "-")
-  line_2, = pyplot.plot(parasor_ppvs, parasor_senss, label = "ParasoR", marker = "v", linestyle = "-")
+  line_2, = pyplot.plot(centroidfold_ppvs, centroidfold_senss, label = "CentroidFold", marker = "v", linestyle = "-")
   line_3, = pyplot.plot(centroidhomfold_ppvs, centroidhomfold_senss, label = "CentroidHomFold", marker = "s", linestyle = "-")
   line_4, = pyplot.plot(turbofold_ppvs, turbofold_senss, label = "TurboFold-smp", marker = "p", linestyle = "-")
   pyplot.xlabel("PPV")
