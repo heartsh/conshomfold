@@ -112,7 +112,6 @@ def main():
       turbofold_output_file = open(turbofold_output_file_path, "w")
       turbofold_output_file.write(turbofold_output_file_contents)
       turbofold_output_file.close()
-  shutil.rmtree(temp_dir_path)
   pool = multiprocessing.Pool(num_of_threads)
   begin = time.time()
   pool.map(run_centroidfold, centroidfold_params_4_elapsed_time)
@@ -124,10 +123,11 @@ def main():
   print("The elapsed time of the CentroidFold program for a test set = %f [s]." % centroidfold_elapsed_time)
   print("The elapsed time of the CentroidHomFold program for a test set = %f [s]." % centroidhomfold_elapsed_time)
   print("The elapsed time of the TurboFold-smp program for a test set = %f [s]." % turbofold_elapsed_time)
+  shutil.rmtree(temp_dir_path)
 
 def run_centroidfold(centroidfold_params):
   (rna_file_path, centroidfold_output_file_path, gamma_str) = centroidfold_params
-  centroidfold_command = "centroid_homfold " + rna_file_path + " -g " + gamma_str
+  centroidfold_command = "centroid_fold " + rna_file_path + " -g " + gamma_str
   (output, _, _) = utils.run_command(centroidfold_command)
   lines = [line.split()[0] for (i, line) in enumerate(str(output).split("\\n")) if i % 3 == 2]
   centroidfold_output_file = open(centroidfold_output_file_path, "w+")
@@ -143,17 +143,17 @@ def run_centroidhomfold(centroidhomfold_params):
   rec_seq_len = len(recs)
   centroidhomfold_output_file = open(centroidhomfold_output_file_path, "w+")
   centroidhomfold_output_buf = ""
-  seq_file_path = os.path.join(temp_dir_path, "seqs.fa")
-  hom_seq_file_path = os.path.join(temp_dir_path, "hom_seqs.fa")
+  basename = os.path.basename(rna_file_path)
+  seq_file_path = os.path.join(temp_dir_path, "seqs_4_%s.fa" % basename)
+  hom_seq_file_path = os.path.join(temp_dir_path, "hom_seqs_4_%s.fa" % basename)
   for (i, rec) in enumerate(recs):
-    SeqIO.write(rec, open(seq_file_path, "w"), "fasta")
-    for (j, rec) in enumerate(recs) if j != i:
-      SeqIO.write(rec, open(hom_seq_file_path, "a"), "fasta")
+    SeqIO.write([rec], open(seq_file_path, "w"), "fasta")
+    hom_recs = [rec for (j, rec) in enumerate(recs) if j != i]
+    SeqIO.write(recs, open(hom_seq_file_path, "w"), "fasta")
     centroidhomfold_command = "centroid_homfold " + seq_file_path + " -H " + hom_seq_file_path + " -g " + gamma_str
     (output, _, _) = utils.run_command(centroidhomfold_command)
-    open(hom_seq_file_path, "w")
     centroidhomfold_output_buf += ">%d\n%s\n\n" % (i, str(output).split("\\n")[2].split()[0])
-    centroidhomfold_output_file.write(centroidhomfold_output_buf)
+  centroidhomfold_output_file.write(centroidhomfold_output_buf)
   centroidhomfold_output_file.close()
 
 def run_turbofold(turbofold_config_file_path):
