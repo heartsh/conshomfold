@@ -49,8 +49,7 @@ def main():
     stem_output_dir_path = os.path.join(stem_dir_path, rna_familiy_name)
     stem_command = "stem -i " + rna_file_path + " -o " + stem_output_dir_path
     begin = time.time()
-    if False:
-      utils.run_command(stem_command)
+    utils.run_command(stem_command)
     elapsed_time = time.time() - begin
     stem_and_neofold_elapsed_time += elapsed_time
     bpp_mat_file_path = os.path.join(stem_output_dir_path, bpp_mat_file)
@@ -72,8 +71,7 @@ def main():
       neofold_output_file_path = os.path.join(neofold_output_dir_path, output_file)
       neofold_command = "neofold -f " + rna_file_path + " -p " + bpp_mat_file_path + " -o " + neofold_output_file_path + " --gamma " + gamma_str
       begin = time.time()
-      if False:
-        utils.run_command(neofold_command)
+      utils.run_command(neofold_command)
       elapsed_time = time.time() - begin
       if gamma == 1:
         stem_and_neofold_elapsed_time += elapsed_time
@@ -85,44 +83,41 @@ def main():
       centroidhomfold_params.insert(0, (rna_file_path, centroidhomfold_output_file_path, gamma_str, temp_dir_path))
       if gamma == 1:
         centroidhomfold_params_4_elapsed_time.insert(0, (rna_file_path, centroidhomfold_output_file_path, gamma_str, temp_dir_path))
-      if False:
-        recs = [rec for rec in SeqIO.parse(rna_file_path, "fasta")]
-        rec_seq_len = len(recs)
-        turbofold_config_file_contents = "InSeq = {"
-        for i in range(rec_seq_len):
-          turbofold_config_file_contents += "%s/%d.fasta;" % (temp_dir_path, i)
-        turbofold_config_file_contents += "}\nOutCT = {"
-        for i in range(rec_seq_len):
-          turbofold_config_file_contents += "%s/%d.ct;" % (temp_dir_path, i)
-        turbofold_config_file_contents += "}\nIterations = 1\nMode = MEA\nMeaGamma = %f\nProcessors = %d" % (gamma, num_of_threads)
-        turbofold_config_file_path = os.path.join(temp_dir_path, "turbofold_config.dat")
-        turbofold_config_file = open(turbofold_config_file_path, "w")
-        turbofold_config_file.write(turbofold_config_file_contents)
-        turbofold_config_file.close()
-        for (i, rec) in enumerate(recs):
-          SeqIO.write([rec], open(os.path.join(temp_dir_path, "%d.fasta" % i), "w"), "fasta")
-        begin = time.time()
-        run_turbofold(turbofold_config_file_path)
-        elapsed_time = time.time() - begin
-        if gamma == 1:
-          turbofold_elapsed_time += elapsed_time
-        turbofold_output_file_contents = ""
-        for i in range(rec_seq_len):
-          ct_file_path = os.path.join(temp_dir_path, "%d.ct" % i)
-          ss_string = read_ct_file(ct_file_path)
-          turbofold_output_file_contents += ">%d\n%s\n\n" % (i, ss_string)
-        turbofold_output_file_path = os.path.join(turbofold_output_dir_path, output_file)
-        turbofold_output_file = open(turbofold_output_file_path, "w")
-        turbofold_output_file.write(turbofold_output_file_contents)
-        turbofold_output_file.close()
+      recs = [rec for rec in SeqIO.parse(rna_file_path, "fasta")]
+      rec_seq_len = len(recs)
+      turbofold_config_file_contents = "InSeq = {"
+      for i in range(rec_seq_len):
+        turbofold_config_file_contents += "%s/%d.fasta;" % (temp_dir_path, i)
+      turbofold_config_file_contents += "}\nOutCT = {"
+      for i in range(rec_seq_len):
+        turbofold_config_file_contents += "%s/%d.ct;" % (temp_dir_path, i)
+      turbofold_config_file_contents += "}\nIterations = 1\nMode = MEA\nMeaGamma = %f\nProcessors = %d" % (gamma, num_of_threads)
+      turbofold_config_file_path = os.path.join(temp_dir_path, "turbofold_config.dat")
+      turbofold_config_file = open(turbofold_config_file_path, "w")
+      turbofold_config_file.write(turbofold_config_file_contents)
+      turbofold_config_file.close()
+      for (i, rec) in enumerate(recs):
+        SeqIO.write([rec], open(os.path.join(temp_dir_path, "%d.fasta" % i), "w"), "fasta")
+      begin = time.time()
+      run_turbofold(turbofold_config_file_path)
+      elapsed_time = time.time() - begin
+      if gamma == 1:
+        turbofold_elapsed_time += elapsed_time
+      turbofold_output_file_contents = ""
+      for i in range(rec_seq_len):
+        ct_file_path = os.path.join(temp_dir_path, "%d.ct" % i)
+        ss_string = read_ct_file(ct_file_path)
+        turbofold_output_file_contents += ">%d\n%s\n\n" % (i, ss_string)
+      turbofold_output_file_path = os.path.join(turbofold_output_dir_path, output_file)
+      turbofold_output_file = open(turbofold_output_file_path, "w")
+      turbofold_output_file.write(turbofold_output_file_contents)
+      turbofold_output_file.close()
   pool = multiprocessing.Pool(num_of_threads)
   begin = time.time()
-  if False:
-    pool.map(run_centroidfold, centroidfold_params_4_elapsed_time)
+  pool.map(run_centroidfold, centroidfold_params_4_elapsed_time)
   centroidfold_elapsed_time = time.time() - begin
   begin = time.time()
-  if False:
-    pool.map(run_centroidhomfold, centroidhomfold_params_4_elapsed_time)
+  pool.map(run_centroidhomfold, centroidhomfold_params_4_elapsed_time)
   centroidhomfold_elapsed_time = time.time() - begin
   pool.map(run_centroidfold, centroidfold_params)
   pool.map(run_centroidhomfold, centroidhomfold_params)
