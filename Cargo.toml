@@ -5,7 +5,6 @@ authors = ["heartsh <heartsh@heartsh.io>"]
 description = "NeoFold Program, Program for Maximum-expected-accuracy Estimations of RNA Secondary Structures with Incorporating Homologous-RNA sequences"
 
 [dependencies]
-bio-seq-algos = "0.1"
 rna-algos = "0.1"
 itertools = "0.7"
 lazy_static = "0.1"
