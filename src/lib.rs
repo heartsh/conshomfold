@@ -1,6 +1,6 @@
-extern crate stem;
+extern crate rfamprob;
 
-pub use stem::*;
+pub use rfamprob::*;
 
 pub type Mea = Prob;
 #[derive(Clone)]
@@ -24,21 +24,21 @@ impl MeaSs {
   }
 }
 
-pub fn neofold(bpp_mat: &SparseProbMat, seq_len: usize, gamma_plus_1: Prob) -> MeaSs {
+pub fn neofold(bpp_mat: &SparseProbMat, upp_mat: &Probs, seq_len: usize, gamma: Prob) -> MeaSs {
   let mut mea_mat_4_bp_pos_pairs = MeaMat::default();
   let mut pos_seqs_with_poss_4_forward_bps = PosSeqsWithPoss::default();
-  let inversed_gamma_plus_1 = 1. / gamma_plus_1;
+  // let inversed_gamma_plus_1 = 1. / gamma_plus_1;
   for sub_seq_len in 2 .. seq_len + 3 {
     for i in 0 .. seq_len + 3 - sub_seq_len {
       let j = i + sub_seq_len - 1;
       let pos_pair = (i, j);
       match bpp_mat.get(&pos_pair) {
         Some(&bpp) => {
-          if bpp <= inversed_gamma_plus_1 {
+          /* if bpp <= inversed_gamma_plus_1 {
             continue;
-          }
-          let meas_4_bp_pos_pair = get_meas_4_bp_pos_pair(&pos_pair, &mea_mat_4_bp_pos_pairs, &pos_seqs_with_poss_4_forward_bps);
-          mea_mat_4_bp_pos_pairs.insert(pos_pair, meas_4_bp_pos_pair[j - i - 1] + gamma_plus_1 * bpp - 1.);
+          } */
+          let meas_4_bp_pos_pair = get_meas_4_bp_pos_pair(&pos_pair, &mea_mat_4_bp_pos_pairs, &pos_seqs_with_poss_4_forward_bps, upp_mat);
+          mea_mat_4_bp_pos_pairs.insert(pos_pair, meas_4_bp_pos_pair[j - i - 1] + gamma * bpp);
           let poss_exist = match pos_seqs_with_poss_4_forward_bps.get(&j) {
             Some(_) => {true},
             None => {false},
@@ -58,14 +58,14 @@ pub fn neofold(bpp_mat: &SparseProbMat, seq_len: usize, gamma_plus_1: Prob) -> M
   let mut pos_pair_stack = vec![pseudo_pos_pair];
   while pos_pair_stack.len() > 0 {
     let pos_pair_1 = pos_pair_stack.pop().expect("Failed to pop an element of a vector.");
-    let meas_4_bp_pos_pair = get_meas_4_bp_pos_pair(&pos_pair_1, &mea_mat_4_bp_pos_pairs, &pos_seqs_with_poss_4_forward_bps);
+    let meas_4_bp_pos_pair = get_meas_4_bp_pos_pair(&pos_pair_1, &mea_mat_4_bp_pos_pairs, &pos_seqs_with_poss_4_forward_bps, upp_mat);
     let (i, j) = pos_pair_1;
     let mea = meas_4_bp_pos_pair[j - i - 1];
     if mea == 0. {continue;}
     let mut n = j - 1;
     while meas_4_bp_pos_pair[n - i] > 0. {
       let mea = meas_4_bp_pos_pair[n - i];
-      if mea == meas_4_bp_pos_pair[n - i - 1] {
+      if mea == meas_4_bp_pos_pair[n - i - 1] + upp_mat[n] {
         n = n - 1;
       } else {
         match pos_seqs_with_poss_4_forward_bps.get(&n) {
@@ -98,7 +98,7 @@ pub fn neofold(bpp_mat: &SparseProbMat, seq_len: usize, gamma_plus_1: Prob) -> M
   mea_ss
 }
 
-fn get_meas_4_bp_pos_pair(pos_pair: &PosPair, mea_mat_4_bp_pos_pairs: &MeaMat, pos_seqs_with_poss_4_forward_bps: &PosSeqsWithPoss) -> Meas {
+fn get_meas_4_bp_pos_pair(pos_pair: &PosPair, mea_mat_4_bp_pos_pairs: &MeaMat, pos_seqs_with_poss_4_forward_bps: &PosSeqsWithPoss, upp_mat: &Probs) -> Meas {
   let (i, j) = *pos_pair;
   let sub_seq_len = j - i + 1;
   let mut meas_4_bp_pos_pair = vec![0.; sub_seq_len - 1];
@@ -116,7 +116,7 @@ fn get_meas_4_bp_pos_pair(pos_pair: &PosPair, mea_mat_4_bp_pos_pairs: &MeaMat, p
       },
       None => {},
     };
-    let ea = meas_4_bp_pos_pair[n - i - 1];
+    let ea = meas_4_bp_pos_pair[n - i - 1] + upp_mat[n];
     if ea > mea {
       mea = ea;
     }

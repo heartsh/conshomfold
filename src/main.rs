@@ -37,6 +37,7 @@ fn main() {
   let mut opts = Options::new();
   opts.reqopt("f", "input_fasta_file_path", "The path to an input FASTA file containing RNA sequences", "STR");
   opts.reqopt("p", "input_base_pair_prob_matrix_file_path", "The path to an input file containing base-pairing probability matrices", "STR");
+  opts.reqopt("q", "input_unpair_prob_matrix_file_path", "The path to an input file containing unpairing probability matrices", "STR");
   opts.reqopt("o", "output_file_path", "The path to an output file which will contain estimated secondary structures", "STR");
   opts.optopt("", "gamma", &format!("An MEA gamma (Uses {} by default)", DEFAULT_GAMMA), "FLOAT");
   opts.optopt("t", "num_of_threads", "The number of threads in multithreading (Uses the number of all the threads of this computer by default)", "UINT");
@@ -49,13 +50,15 @@ fn main() {
   let input_fasta_file_path = Path::new(&input_fasta_file_path);
   let input_bpp_mat_file_path = opts.opt_str("p").expect("Failed to get the path to an input file containing base-pairing probability matrices from command arguments.");
   let input_bpp_mat_file_path = Path::new(&input_bpp_mat_file_path);
+  let input_upp_mat_file_path = opts.opt_str("q").expect("Failed to get the path to an input file containing unpairing probability matrices from command arguments.");
+  let input_upp_mat_file_path = Path::new(&input_upp_mat_file_path);
   let output_file_path = opts.opt_str("o").expect("Failed to get the path to an output file which will contain estimated secondary structures from command arguments.");
   let output_file_path = Path::new(&output_file_path);
-  let gamma_plus_1 = if opts.opt_present("gamma") {
+  let gamma = if opts.opt_present("gamma") {
     opts.opt_str("gamma").expect("Failed to get an MEA gamma from command arguments.").parse().expect("Failed to parse an MEA gamma.")
   } else {
     DEFAULT_GAMMA
-  } + 1.;
+  };
   let num_of_threads = if opts.opt_present("t") {
     opts.opt_str("t").expect("Failed to get the number of threads in multithreading from command arguments.").parse().expect("Failed to parse the number of threads in multithreading.")
   } else {
@@ -92,17 +95,35 @@ fn main() {
       );
     }
   }
+  let mut upp_mats = vec![Probs::new(); num_of_fasta_records];
+  let mut reader_2_input_upp_mat_file = BufReader::new(File::open(input_upp_mat_file_path).expect("Failed to read an input file."));
+  let mut buf_4_reader_2_input_upp_mat_file = Vec::new();
+  for _ in 0 .. 2 {
+    let _ = reader_2_input_upp_mat_file.read_until(b'>', &mut buf_4_reader_2_input_upp_mat_file);
+  }
+  for (i, vec) in reader_2_input_upp_mat_file.split(b'>').enumerate() {
+    if i == num_of_fasta_records {continue;}
+    let vec = vec.expect("Failed to read an input file.");
+    let substrings = unsafe {String::from_utf8_unchecked(vec).split_whitespace().map(|string| {String::from(string)}).collect::<Strings>()};
+    let rna_id = substrings[0].parse::<RnaId>().expect("Failed to parse an RNA ID.");
+    for subsubstring in &substrings[1 ..] {
+      let subsubsubstrings = subsubstring.split(",").collect::<Vec<&str>>();
+      upp_mats[rna_id].push(subsubsubstrings[1].parse().expect("Failed to parse a base-pairing probability."));
+    }
+    upp_mats[rna_id].insert(0, 0.);
+    upp_mats[rna_id].push(0.);
+  }
   let mut mea_sss = vec![MeaSs::new(); num_of_fasta_records];
   let mut thread_pool = Pool::new(num_of_threads);
   thread_pool.scoped(|scope| {
-    for (mea_ss, bpp_mat, fasta_record) in multizip((mea_sss.iter_mut(), bpp_mats.iter(), fasta_records.iter())) {
+    for (mea_ss, bpp_mat, upp_mat, fasta_record) in multizip((mea_sss.iter_mut(), bpp_mats.iter(), upp_mats.iter(), fasta_records.iter())) {
       scope.execute(move || {
-        *mea_ss = neofold(bpp_mat, fasta_record.2, gamma_plus_1);
+        *mea_ss = neofold(bpp_mat, upp_mat, fasta_record.2, gamma);
       });
     }
   });
   let mut writer_2_output_file = BufWriter::new(File::create(output_file_path).expect("Failed to create an output file."));
-  let mut buf_4_writer_2_output_file = format!("; The version {} of the NeoFold program.\n; The path to the input FASTA file to compute the secondary structures (= SSs) in this file = \"{}\".\n; The path to the input base-pairing matrix file to compute these structures = \"{}\".\n; The values of the parameters used to compute these structures are as follows.\n; \"gamma\" = {}, \"num_of_threads\" = {}.\n; Each row beginning with \">\" is with a pair of the ID of an RNA sequence and expected accuracy of the maximum-expected-accuracy SS computed from this sequence. The row next to this row is with this SS.", VERSION, input_fasta_file_path.display(), input_bpp_mat_file_path.display(), gamma_plus_1 - 1., num_of_threads);
+  let mut buf_4_writer_2_output_file = format!("; The version {} of the NeoFold program.\n; The path to the input FASTA file to compute the secondary structures (= SSs) in this file = \"{}\".\n; The path to the input base-pairing matrix file to compute these structures = \"{}\".\n; The values of the parameters used to compute these structures are as follows.\n; \"gamma\" = {}, \"num_of_threads\" = {}.\n; Each row beginning with \">\" is with a pair of the ID of an RNA sequence and expected accuracy of the maximum-expected-accuracy SS computed from this sequence. The row next to this row is with this SS.", VERSION, input_fasta_file_path.display(), input_bpp_mat_file_path.display(), gamma, num_of_threads);
   for (rna_id, mea_ss) in mea_sss.iter().enumerate() {
     let buf_4_rna_id = format!("\n\n>{},{}\n", rna_id, mea_ss.ea) + &unsafe {String::from_utf8_unchecked(get_mea_ss_str(mea_ss, fasta_records[rna_id].2))};
     buf_4_writer_2_output_file.push_str(&buf_4_rna_id);
