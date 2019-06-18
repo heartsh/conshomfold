@@ -13,8 +13,8 @@ scoped_threadpool = "0.1"
 getopts = "0.2"
 bio = "0.20"
 num_cpus = "1.0"
-# rfamprob = "0.1"
-rfamprob = {path = "../rfamprob"}
+# rnafamprob = "0.1"
+rnafamprob = {path = "../rnafamprob"}
 
 [lib]
 path = "src/lib.rs"

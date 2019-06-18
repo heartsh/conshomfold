@@ -225,7 +225,7 @@ def main():
   line_3, = pyplot.plot(contrafold_ppvs, contrafold_senss, label = "CentroidFold (CONTRAfold)", marker = "^", linestyle = "-")
   line_4, = pyplot.plot(centroidhomfold_ppvs, centroidhomfold_senss, label = "CentroidHomFold", marker = "s", linestyle = "-")
   line_5, = pyplot.plot(turbofold_ppvs, turbofold_senss, label = "TurboFold-smp", marker = "p", linestyle = "-")
-  pyplot.xlabel("PPV")
+  pyplot.xlabel("Positive predictive value")
   pyplot.ylabel("Sensitivity")
   pyplot.legend(handles = [line_1, line_2, line_3, line_4, line_5], loc = 1)
   image_dir_path = asset_dir_path + "/images"
@@ -239,7 +239,7 @@ def main():
   line_3, = pyplot.plot(contrafold_fprs, contrafold_senss, label = "CentroidFold (CONTRAfold)", marker = "^", linestyle = "-")
   line_4, = pyplot.plot(centroidhomfold_fprs, centroidhomfold_senss, label = "CentroidHomFold", marker = "s", linestyle = "-")
   line_5, = pyplot.plot(turbofold_fprs, turbofold_senss, label = "TurboFold-smp", marker = "p", linestyle = "-")
-  pyplot.xlabel("FPR")
+  pyplot.xlabel("False positive rate")
   pyplot.ylabel("Sensitivity")
   pyplot.legend(handles = [line_1, line_2, line_3, line_4, line_5], loc = 4)
   image_dir_path = asset_dir_path + "/images"
