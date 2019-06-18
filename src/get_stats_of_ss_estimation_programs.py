@@ -18,6 +18,7 @@ def main():
   centroidhomfold_ss_dir_path = asset_dir_path + "/centroidhomfold"
   turbofold_ss_dir_path = asset_dir_path + "/turbofold"
   rna_fam_dir_path = asset_dir_path + "/sampled_rna_families"
+  # rna_fam_dir_path = asset_dir_path + "/rna_families"
   neofold_ppvs = []
   neofold_senss = []
   neofold_fprs = []
@@ -240,7 +241,7 @@ def main():
   line_5, = pyplot.plot(turbofold_fprs, turbofold_senss, label = "TurboFold-smp", marker = "p", linestyle = "-")
   pyplot.xlabel("FPR")
   pyplot.ylabel("Sensitivity")
-  pyplot.legend(handles = [line_1, line_2, line_3, line_4, line_5], loc = 2)
+  pyplot.legend(handles = [line_1, line_2, line_3, line_4, line_5], loc = 4)
   image_dir_path = asset_dir_path + "/images"
   if not os.path.exists(image_dir_path):
     os.mkdir(image_dir_path)

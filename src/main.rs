@@ -42,25 +42,29 @@ fn main() {
   opts.optopt("", "gamma", &format!("An MEA gamma (Uses {} by default)", DEFAULT_GAMMA), "FLOAT");
   opts.optopt("t", "num_of_threads", "The number of threads in multithreading (Uses the number of all the threads of this computer by default)", "UINT");
   opts.optflag("h", "help", "Print a help menu");
-  let opts = match opts.parse(&args[1 ..]) {
+  let matches = match opts.parse(&args[1 ..]) {
     Ok(opt) => {opt}
     Err(failure) => {print_program_usage(&program_name, &opts); panic!(failure.to_string())}
   };
-  let input_fasta_file_path = opts.opt_str("f").expect("Failed to get the path to an input FASTA file containing RNA sequences from command arguments.");
+  if matches.opt_present("h") {
+    print_program_usage(&program_name, &opts);
+    return;
+  }
+  let input_fasta_file_path = matches.opt_str("f").expect("Failed to get the path to an input FASTA file containing RNA sequences from command arguments.");
   let input_fasta_file_path = Path::new(&input_fasta_file_path);
-  let input_bpp_mat_file_path = opts.opt_str("p").expect("Failed to get the path to an input file containing base-pairing probability matrices from command arguments.");
+  let input_bpp_mat_file_path = matches.opt_str("p").expect("Failed to get the path to an input file containing base-pairing probability matrices from command arguments.");
   let input_bpp_mat_file_path = Path::new(&input_bpp_mat_file_path);
-  let input_upp_mat_file_path = opts.opt_str("q").expect("Failed to get the path to an input file containing unpairing probability matrices from command arguments.");
+  let input_upp_mat_file_path = matches.opt_str("q").expect("Failed to get the path to an input file containing unpairing probability matrices from command arguments.");
   let input_upp_mat_file_path = Path::new(&input_upp_mat_file_path);
-  let output_file_path = opts.opt_str("o").expect("Failed to get the path to an output file which will contain estimated secondary structures from command arguments.");
+  let output_file_path = matches.opt_str("o").expect("Failed to get the path to an output file which will contain estimated secondary structures from command arguments.");
   let output_file_path = Path::new(&output_file_path);
-  let gamma = if opts.opt_present("gamma") {
-    opts.opt_str("gamma").expect("Failed to get an MEA gamma from command arguments.").parse().expect("Failed to parse an MEA gamma.")
+  let gamma = if matches.opt_present("gamma") {
+    matches.opt_str("gamma").expect("Failed to get an MEA gamma from command arguments.").parse().expect("Failed to parse an MEA gamma.")
   } else {
     DEFAULT_GAMMA
   };
-  let num_of_threads = if opts.opt_present("t") {
-    opts.opt_str("t").expect("Failed to get the number of threads in multithreading from command arguments.").parse().expect("Failed to parse the number of threads in multithreading.")
+  let num_of_threads = if matches.opt_present("t") {
+    matches.opt_str("t").expect("Failed to get the number of threads in multithreading from command arguments.").parse().expect("Failed to parse the number of threads in multithreading.")
   } else {
     num_cpus::get() as NumOfThreads
   };

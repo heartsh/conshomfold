@@ -36,6 +36,7 @@ def main():
   if not os.path.isdir(temp_dir_path):
     os.mkdir(temp_dir_path)
   rna_dir_path = asset_dir_path + "/sampled_rna_families"
+  # rna_dir_path = asset_dir_path + "/rna_families"
   bpp_mat_file = "bpp_mats_on_sta.dat"
   upp_mat_file = "upp_mats.dat"
   gammas = [2. ** i for i in range(-7, 11)]

@@ -9,8 +9,7 @@ def main():
   (current_work_dir_path, asset_dir_path, program_dir_path, conda_program_dir_path) = utils.get_dir_paths()
   rna_fam_dir_path = asset_dir_path + "/rna_families"
   sampled_rna_fam_dir_path = asset_dir_path + "/sampled_rna_families"
-  max_num_of_samples = 10
-  min_num_of_samples = 2
+  num_of_samples = 10
   if not os.path.isdir(sampled_rna_fam_dir_path):
     os.mkdir(sampled_rna_fam_dir_path)
   for rna_seq_file in os.listdir(rna_fam_dir_path):
@@ -24,12 +23,11 @@ def main():
     num_of_recs = len(seq_recs)
     rna_seq_file_path = os.path.join(sampled_rna_fam_dir_path, rna_seq_file)
     ss_file_path = os.path.join(sampled_rna_fam_dir_path, ss_file)
-    if len(seq_recs) <= max_num_of_samples:
+    if num_of_recs <= num_of_samples:
       SeqIO.write(seq_recs, rna_seq_file_path, "fasta")
       SeqIO.write(ss_recs, ss_file_path, "fasta")
     else:
-      num_of_samples = numpy.random.choice(numpy.arange(min_num_of_samples, max_num_of_samples + 1), 1)
-      sampled_indexes = numpy.random.choice(numpy.arange(num_of_recs), num_of_samples)
+      sampled_indexes = numpy.random.choice(numpy.arange(num_of_recs), num_of_samples, replace = False)
       sampled_seq_recs = [rec for (i, rec) in enumerate(seq_recs) if i in sampled_indexes]
       sampled_ss_recs = [rec for (i, rec) in enumerate(ss_recs) if i in sampled_indexes]
       SeqIO.write(sampled_seq_recs, rna_seq_file_path, "fasta")
