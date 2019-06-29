@@ -1,6 +1,6 @@
-extern crate rfamprob;
+extern crate rnafamprob;
 
-pub use rfamprob::*;
+pub use rnafamprob::*;
 
 pub type Mea = Prob;
 #[derive(Clone)]
@@ -27,16 +27,12 @@ impl MeaSs {
 pub fn neofold(bpp_mat: &SparseProbMat, upp_mat: &Probs, seq_len: usize, gamma: Prob) -> MeaSs {
   let mut mea_mat_4_bp_pos_pairs = MeaMat::default();
   let mut pos_seqs_with_poss_4_forward_bps = PosSeqsWithPoss::default();
-  // let inversed_gamma_plus_1 = 1. / gamma_plus_1;
   for sub_seq_len in 2 .. seq_len + 3 {
     for i in 0 .. seq_len + 3 - sub_seq_len {
       let j = i + sub_seq_len - 1;
       let pos_pair = (i, j);
       match bpp_mat.get(&pos_pair) {
         Some(&bpp) => {
-          /* if bpp <= inversed_gamma_plus_1 {
-            continue;
-          } */
           let meas_4_bp_pos_pair = get_meas_4_bp_pos_pair(&pos_pair, &mea_mat_4_bp_pos_pairs, &pos_seqs_with_poss_4_forward_bps, upp_mat);
           mea_mat_4_bp_pos_pairs.insert(pos_pair, meas_4_bp_pos_pair[j - i - 1] + gamma * bpp);
           let poss_exist = match pos_seqs_with_poss_4_forward_bps.get(&j) {
