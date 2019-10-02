@@ -22,13 +22,8 @@ type FastaId = String;
 type FastaRecord = (FastaId, Seq, usize);
 type FastaRecords = Vec<FastaRecord>;
 type Strings = Vec<String>;
-type MeaSsChar = u8;
-type MeaSsStr = Vec<MeaSsChar>;
 
 const DEFAULT_GAMMA: Prob = 1.;
-const NOT_BASE_PAIRING_BASE: MeaSsChar = '.' as MeaSsChar;
-const BASE_PAIRING_LEFT_BASE: MeaSsChar = '(' as MeaSsChar;
-const BASE_PAIRING_RIGHT_BASE: MeaSsChar = ')' as MeaSsChar;
 const VERSION: &'static str = "0.1.0";
 
 fn main() {
@@ -127,7 +122,7 @@ fn main() {
     }
   });
   let mut writer_2_output_file = BufWriter::new(File::create(output_file_path).expect("Failed to create an output file."));
-  let mut buf_4_writer_2_output_file = format!("; The version {} of the NeoFold program.\n; The path to the input FASTA file to compute the secondary structures (= SSs) in this file = \"{}\".\n; The path to the input base-pairing matrix file to compute these structures = \"{}\".\n; The values of the parameters used to compute these structures are as follows.\n; \"gamma\" = {}, \"num_of_threads\" = {}.\n; Each row beginning with \">\" is with a pair of the ID of an RNA sequence and expected accuracy of the maximum-expected-accuracy SS computed from this sequence. The row next to this row is with this SS.", VERSION, input_fasta_file_path.display(), input_bpp_mat_file_path.display(), gamma, num_of_threads);
+  let mut buf_4_writer_2_output_file = format!("; The version {} of the NeoFold program.\n; The path to the input FASTA file for computing the secondary structures (= SSs) in this file = \"{}\".\n; The path to the input base-pairing probability matrix file for computing these structures = \"{}\".\n; The path to the input unpairing probability matrix file for computing these structures = \"{}\".\n; The values of the parameters used for computing these structures are as follows.\n; \"gamma\" = {}, \"num_of_threads\" = {}.\n; Each row beginning with \">\" is with a pair of the ID of an RNA sequence and expected accuracy of the maximum-expected-accuracy SS computed from this sequence. The row next to this row is with this SS.", VERSION, input_fasta_file_path.display(), input_bpp_mat_file_path.display(), input_upp_mat_file_path.display(), gamma, num_of_threads);
   for (rna_id, mea_ss) in mea_sss.iter().enumerate() {
     let buf_4_rna_id = format!("\n\n>{},{}\n", rna_id, mea_ss.ea) + &unsafe {String::from_utf8_unchecked(get_mea_ss_str(mea_ss, fasta_records[rna_id].2))};
     buf_4_writer_2_output_file.push_str(&buf_4_rna_id);
@@ -143,7 +138,7 @@ fn print_program_usage(program_name: &str, opts: &Options) {
 
 #[inline]
 fn get_mea_ss_str(mea_ss: &MeaSs, seq_len: usize) -> MeaSsStr {
-  let mut mea_ss_str = vec![NOT_BASE_PAIRING_BASE; seq_len];
+  let mut mea_ss_str = vec![UNPAIRING_BASE; seq_len];
   let pseudo_pos_pair = (0, seq_len + 1);
   let mut pos_pair_stack = vec![pseudo_pos_pair];
   while pos_pair_stack.len() > 0 {

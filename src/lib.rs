@@ -8,12 +8,14 @@ pub struct MeaSs {
   pub bp_pos_pair_seqs_inside_pos_pairs: PosPairSeqsWithPosPairs,
   pub ea: Mea,
 }
-type Meas = Vec<Mea>;
-type MeaMat = HashMap<PosPair, Mea, Hasher>;
-type Poss = Vec<Pos>;
-type PosSeqsWithPoss = HashMap<Pos, Poss, Hasher>;
-type PosPairs = Vec<PosPair>;
-type PosPairSeqsWithPosPairs = HashMap<PosPair, PosPairs, Hasher>;
+pub type Meas = Vec<Mea>;
+pub type MeaMat = HashMap<PosPair, Mea, Hasher>;
+pub type Poss = Vec<Pos>;
+pub type PosSeqsWithPoss = HashMap<Pos, Poss, Hasher>;
+pub type PosPairs = Vec<PosPair>;
+pub type PosPairSeqsWithPosPairs = HashMap<PosPair, PosPairs, Hasher>;
+pub type MeaSsChar = u8;
+pub type MeaSsStr = Vec<MeaSsChar>;
 
 impl MeaSs {
   pub fn new() -> MeaSs {
@@ -23,6 +25,10 @@ impl MeaSs {
     }
   }
 }
+
+pub const UNPAIRING_BASE: MeaSsChar = '.' as MeaSsChar;
+pub const BASE_PAIRING_LEFT_BASE: MeaSsChar = '(' as MeaSsChar;
+pub const BASE_PAIRING_RIGHT_BASE: MeaSsChar = ')' as MeaSsChar;
 
 pub fn neofold(bpp_mat: &SparseProbMat, upp_mat: &Probs, seq_len: usize, gamma: Prob) -> MeaSs {
   let mut mea_mat_4_bp_pos_pairs = MeaMat::default();
