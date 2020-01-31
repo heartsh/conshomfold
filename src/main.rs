@@ -1,11 +1,11 @@
-extern crate neofold;
+extern crate phylofold;
 extern crate getopts;
 extern crate scoped_threadpool;
 extern crate bio;
 extern crate itertools;
 extern crate num_cpus;
 
-use neofold::*;
+use phylofold::*;
 use getopts::Options;
 use self::scoped_threadpool::Pool;
 use std::env;
@@ -83,13 +83,11 @@ fn main() {
     let vec = vec.expect("Failed to read an input file.");
     let substrings = unsafe {String::from_utf8_unchecked(vec).split_whitespace().map(|string| {String::from(string)}).collect::<Strings>()};
     let rna_id = substrings[0].parse::<RnaId>().expect("Failed to parse an RNA ID.");
-    let seq_len = fasta_records[rna_id].2;
-    bpp_mats[rna_id].insert((0, seq_len + 1), 1.);
     for subsubstring in &substrings[1 ..] {
       let subsubsubstrings = subsubstring.split(",").collect::<Vec<&str>>();
       bpp_mats[rna_id].insert((
-        subsubsubstrings[0].parse::<Pos>().expect("Failed to parse an index.") + 1,
-        subsubsubstrings[1].parse::<Pos>().expect("Failed to parse an index.") + 1),
+        subsubsubstrings[0].parse::<Pos>().expect("Failed to parse an index."),
+        subsubsubstrings[1].parse::<Pos>().expect("Failed to parse an index.")),
         subsubsubstrings[2].parse().expect("Failed to parse a base-pairing probability."),
       );
     }
@@ -109,15 +107,13 @@ fn main() {
       let subsubsubstrings = subsubstring.split(",").collect::<Vec<&str>>();
       upp_mats[rna_id].push(subsubsubstrings[1].parse().expect("Failed to parse a base-pairing probability."));
     }
-    upp_mats[rna_id].insert(0, 0.);
-    upp_mats[rna_id].push(0.);
   }
   let mut mea_sss = vec![MeaSs::new(); num_of_fasta_records];
   let mut thread_pool = Pool::new(num_of_threads);
   thread_pool.scoped(|scope| {
     for (mea_ss, bpp_mat, upp_mat, fasta_record) in multizip((mea_sss.iter_mut(), bpp_mats.iter(), upp_mats.iter(), fasta_records.iter())) {
       scope.execute(move || {
-        *mea_ss = neofold(bpp_mat, upp_mat, fasta_record.2, gamma);
+        *mea_ss = phylofold(bpp_mat, upp_mat, fasta_record.2, gamma);
       });
     }
   });
@@ -139,22 +135,9 @@ fn print_program_usage(program_name: &str, opts: &Options) {
 #[inline]
 fn get_mea_ss_str(mea_ss: &MeaSs, seq_len: usize) -> MeaSsStr {
   let mut mea_ss_str = vec![UNPAIRING_BASE; seq_len];
-  let pseudo_pos_pair = (0, seq_len + 1);
-  let mut pos_pair_stack = vec![pseudo_pos_pair];
-  while pos_pair_stack.len() > 0 {
-    let pos_pair = pos_pair_stack.pop().expect("Failed to pop an element of a vector.");
-    let (i, j) = pos_pair;
-    if pos_pair != pseudo_pos_pair {
-      mea_ss_str[i - 1] = BASE_PAIRING_LEFT_BASE;
-      mea_ss_str[j - 1] = BASE_PAIRING_RIGHT_BASE;
-    }
-    match mea_ss.bp_pos_pair_seqs_inside_pos_pairs.get(&pos_pair) {
-      Some(pos_pairs) => {
-        for pos_pair in pos_pairs {
-          pos_pair_stack.push(*pos_pair);
-        }
-      }, None => {},
-    }
+  for &(i, j) in &mea_ss.bp_pos_pairs {
+    mea_ss_str[i] = BASE_PAIRING_LEFT_BASE;
+    mea_ss_str[j] = BASE_PAIRING_RIGHT_BASE;
   }
   mea_ss_str
 }

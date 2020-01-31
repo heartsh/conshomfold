@@ -1,9 +1,9 @@
 [package]
-name = "neofold"
+name = "phylofold"
 version = "0.1.0"
 authors = ["heartsh <heartsh@heartsh.io>"]
-description = "NeoFold Program, Program for Maximum-expected-accuracy Estimations of RNA Secondary Structures with Incorporating Homologous-RNA sequences"
-repository = "https://github.com/heartsh/neofold"
+description = "PhyloFold Program, which Predicts RNA Secondary Structures with Incorporating Homologous RNA sequences"
+repository = "https://github.com/heartsh/phylofold"
 readme = "README.md"
 keywords = ["bioinformatics", "rna", "secondary-structure"]
 license = "MIT"
@@ -17,8 +17,9 @@ scoped_threadpool = "0.1"
 getopts = "0.2"
 bio = "0.20"
 num_cpus = "1.0"
-rnafamprob = "0.1"
+# phyloprob = "0.1"
+phyloprob = {path = "../phyloprob"}
 
 [lib]
 path = "src/lib.rs"
-name = "neofold"
+name = "phylofold"
