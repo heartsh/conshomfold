@@ -36,8 +36,10 @@ def main():
   if not os.path.isdir(temp_dir_path):
     os.mkdir(temp_dir_path)
   rna_dir_path = asset_dir_path + "/sampled_rna_families"
+  # rna_dir_path = asset_dir_path + "/sampled_rna_families_copied"
   bpp_mat_file = "bpp_mats_on_sta.dat"
   upp_mat_file = "upp_mats_on_sta.dat"
+  # upp_mat_file = "upp_mats.dat"
   gammas = [2. ** i for i in range(-7, 11)]
   centroidfold_params = []
   contrafold_params = []
@@ -48,12 +50,14 @@ def main():
   rnafamprob_and_neofold_elapsed_time = 0.
   turbofold_elapsed_time = 0.
   for rna_file in os.listdir(rna_dir_path):
-    if not rna_file.endswith(".fa"):
+    if not rna_file.endswith(".fa") or rna_file.startswith("rnase") or rna_file.startswith("rna_3") or rna_file.startswith("bicoid"):
       continue
+    print(rna_file)
     rna_file_path = os.path.join(rna_dir_path, rna_file)
     (rna_familiy_name, extension) = os.path.splitext(rna_file)
     rnafamprob_output_dir_path = os.path.join(rnafamprob_dir_path, rna_familiy_name)
     rnafamprob_command = "phyloprob -i " + rna_file_path + " -o " + rnafamprob_output_dir_path
+    # rnafamprob_command = "rnafamprob -s -i " + rna_file_path + " -o " + rnafamprob_output_dir_path
     begin = time.time()
     utils.run_command(rnafamprob_command)
     elapsed_time = time.time() - begin
@@ -79,7 +83,7 @@ def main():
       gamma_str = str(gamma)
       output_file = "gamma=" + gamma_str + ".dat"
       neofold_output_file_path = os.path.join(neofold_output_dir_path, output_file)
-      neofold_command = "neofold -f " + rna_file_path + " -p " + bpp_mat_file_path + " -q " + upp_mat_file_path + " -o " + neofold_output_file_path + " --gamma " + gamma_str
+      neofold_command = "phylofold -f " + rna_file_path + " -p " + bpp_mat_file_path + " -q " + upp_mat_file_path + " -o " + neofold_output_file_path + " --gamma " + gamma_str
       begin = time.time()
       utils.run_command(neofold_command)
       elapsed_time = time.time() - begin
