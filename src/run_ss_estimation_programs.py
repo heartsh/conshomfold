@@ -50,7 +50,7 @@ def main():
   rnafamprob_and_neofold_elapsed_time = 0.
   turbofold_elapsed_time = 0.
   for rna_file in os.listdir(rna_dir_path):
-    if not rna_file.endswith(".fa") or rna_file.startswith("rnase") or rna_file.startswith("rna_3") or rna_file.startswith("bicoid"):
+    if not rna_file.endswith(".fa"):
       continue
     print(rna_file)
     rna_file_path = os.path.join(rna_dir_path, rna_file)
@@ -116,7 +116,7 @@ def main():
       turbofold_config_file.close()
       for (i, rec) in enumerate(recs):
         SeqIO.write([rec], open(os.path.join(temp_dir_path, "%d.fasta" % i), "w"), "fasta")
-      if False:
+      if True:
         begin = time.time()
         run_turbofold(turbofold_config_file_path)
         elapsed_time = time.time() - begin
@@ -132,7 +132,7 @@ def main():
         turbofold_output_file.write(turbofold_output_file_contents)
         turbofold_output_file.close()
   pool = multiprocessing.Pool(num_of_threads)
-  if False:
+  if True:
     begin = time.time()
     pool.map(run_centroidfold, centroidfold_params_4_elapsed_time)
     centroidfold_elapsed_time = time.time() - begin
@@ -146,7 +146,7 @@ def main():
     pool.map(run_contrafold, contrafold_params)
     pool.map(run_centroidhomfold, centroidhomfold_params)
   print("The elapsed time of the 3 RNAfamProb, McCaskill, and NeoFold programs for a test set = %f [s]." % rnafamprob_and_neofold_elapsed_time)
-  if False:
+  if True:
     print("The elapsed time of the CentroidFold program with the CentroidFold algorithm for a test set = %f [s]." % centroidfold_elapsed_time)
     print("The elapsed time of the CentroidFold program with the CONTRAfold algorithm for a test set = %f [s]." % contrafold_elapsed_time)
     print("The elapsed time of the CentroidHomFold program for a test set = %f [s]." % centroidhomfold_elapsed_time)

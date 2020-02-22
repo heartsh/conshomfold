@@ -34,7 +34,7 @@ def main():
   turbofold_ppvs = []
   turbofold_senss = []
   turbofold_fprs = []
-  gammas = [2. ** i for i in range(-3, 11)]
+  gammas = [2. ** i for i in range(-7, 11)]
   for gamma in gammas:
     gamma_str = str(gamma)
     neofold_tp = neofold_tn = neofold_fp = neofold_fn = 0.
@@ -43,7 +43,7 @@ def main():
     centroidhomfold_tp = centroidhomfold_tn = centroidhomfold_fp = centroidhomfold_fn = 0.
     turbofold_tp = turbofold_tn = turbofold_fp = turbofold_fn = 0.
     for rna_fam_file in os.listdir(rna_fam_dir_path):
-      if not rna_fam_file.endswith(".fa") or rna_fam_file.startswith("rnase") or rna_fam_file.startswith("rna_3") or rna_fam_file.startswith("bicoid"):
+      if not rna_fam_file.endswith(".fa"):
         continue
       rna_seq_file_path = os.path.join(rna_fam_dir_path, rna_fam_file)
       rna_seq_lens = [len(rna_seq.seq) for rna_seq in SeqIO.parse(rna_seq_file_path, "fasta")]
