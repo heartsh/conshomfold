@@ -36,10 +36,8 @@ def main():
   if not os.path.isdir(temp_dir_path):
     os.mkdir(temp_dir_path)
   rna_dir_path = asset_dir_path + "/sampled_rna_families"
-  # rna_dir_path = asset_dir_path + "/sampled_rna_families_copied"
   bpp_mat_file = "bpp_mats_on_sta.dat"
   upp_mat_file = "upp_mats_on_sta.dat"
-  # upp_mat_file = "upp_mats.dat"
   gammas = [2. ** i for i in range(-7, 11)]
   centroidfold_params = []
   contrafold_params = []
@@ -57,7 +55,6 @@ def main():
     (rna_familiy_name, extension) = os.path.splitext(rna_file)
     rnafamprob_output_dir_path = os.path.join(rnafamprob_dir_path, rna_familiy_name)
     rnafamprob_command = "phyloprob -i " + rna_file_path + " -o " + rnafamprob_output_dir_path
-    # rnafamprob_command = "rnafamprob -s -i " + rna_file_path + " -o " + rnafamprob_output_dir_path
     begin = time.time()
     utils.run_command(rnafamprob_command)
     elapsed_time = time.time() - begin

@@ -18,7 +18,6 @@ def main():
   centroidhomfold_ss_dir_path = asset_dir_path + "/centroidhomfold"
   turbofold_ss_dir_path = asset_dir_path + "/turbofold"
   rna_fam_dir_path = asset_dir_path + "/sampled_rna_families"
-  # rna_fam_dir_path = asset_dir_path + "/rna_families"
   neofold_ppvs = []
   neofold_senss = []
   neofold_fprs = []
