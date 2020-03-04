@@ -24,31 +24,14 @@ def main():
     rna_seq_file_path = os.path.join(sampled_rna_fam_dir_path, rna_seq_file)
     ss_file_path = os.path.join(sampled_rna_fam_dir_path, ss_file)
     if num_of_recs <= num_of_samples:
-      for i in range(num_of_recs):
-        seq = seq_recs[i].seq
-        ss = ss_recs[i].seq
-        left_el_start, right_el_start = find_ext_loop_starts(ss)
-        seq_recs[i].seq = seq[left_el_start : right_el_start + 1]
-        ss_recs[i].seq = ss[left_el_start : right_el_start + 1]
       SeqIO.write(seq_recs, rna_seq_file_path, "fasta")
       SeqIO.write(ss_recs, ss_file_path, "fasta")
     else:
       sampled_indexes = numpy.random.choice(numpy.arange(num_of_recs), num_of_samples, replace = False)
       sampled_seq_recs = [rec for (i, rec) in enumerate(seq_recs) if i in sampled_indexes]
       sampled_ss_recs = [rec for (i, rec) in enumerate(ss_recs) if i in sampled_indexes]
-      for i in range(len(sampled_indexes)):
-        sampled_seq = sampled_seq_recs[i].seq
-        sampled_ss = sampled_ss_recs[i].seq
-        left_el_start, right_el_start = find_ext_loop_starts(sampled_ss)
-        sampled_seq_recs[i].seq = sampled_seq[left_el_start : right_el_start + 1]
-        sampled_ss_recs[i].seq = sampled_ss[left_el_start : right_el_start + 1]
       SeqIO.write(sampled_seq_recs, rna_seq_file_path, "fasta")
       SeqIO.write(sampled_ss_recs, ss_file_path, "fasta")
-
-def find_ext_loop_starts(ss):
-  left_start = ss.find("(")
-  right_start = ss.rfind(")")
-  return left_start, right_start
 
 if __name__ == "__main__":
   main()

@@ -1,6 +1,4 @@
-# NeoFold Program, Program for Maximum-expected-accuracy Estimations of RNA Secondary Structures with Incorporating Homologous-RNA sequences 
-This project provides the NeoFold Program, a program for the maximum-expected-accuracy estimations of RNA secondary structures with incorporating homologous-RNA sequences.
-
+# PhyloFold Program, which Predicts RNA Single Secondary Structures to Incorporate Phylogeny among Homologs 
 # Installation
 This project has been written in mainly Rust, a systems programming language.
 So first, you need to install the Rust compiler, package manager, and standard library. 
@@ -10,13 +8,20 @@ You can install these 3 components with 1 line as follows:
 $ curl https://sh.rustup.rs -sSf | sh
 ```
 The above installation is done by [Rustup](https://github.com/rust-lang-nursery/rustup.rs), so you can easily switch a compiler to use. 
-Now you can install the NeoFold program as follows: 
+Now you can install the PhyloFold program and its dependent, the PhyloProb program, as follows: 
 ```bash
-$ cargo install neofold
+$ cargo install phyloprob # You input the probabilities computed by this program to "phylofold"
+$ cargo install phylofold
 ```
 Check if this program has been installed properly as follows:
 ```bash
-$ neofold
+$ phyloprob
+$ phylofold
+```
+After the test, the figures shown in the paper of the PhyloFold program can be reproduced:
+```bash
+$ cd src
+$ ./run_all.py # Install python packages required to the reproduction. Saved figures will appear at the "../assets/images" directory.
 ```
 
 # Author

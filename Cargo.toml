@@ -2,7 +2,7 @@
 name = "phylofold"
 version = "0.1.0"
 authors = ["heartsh <heartsh@heartsh.io>"]
-description = "PhyloFold Program, which Predicts RNA Secondary Structures with Incorporating Homologous RNA sequences"
+description = "PhyloFold Program, which Predicts RNA Single Secondary Structures to Incorporate Phylogeny among Homologs"
 repository = "https://github.com/heartsh/phylofold"
 readme = "README.md"
 keywords = ["bioinformatics", "rna", "secondary-structure"]
@@ -17,8 +17,7 @@ scoped_threadpool = "0.1"
 getopts = "0.2"
 bio = "0.20"
 num_cpus = "1.0"
-# phyloprob = "0.1"
-phyloprob = {path = "../phyloprob"}
+phyloprob = "0.1"
 
 [lib]
 path = "src/lib.rs"

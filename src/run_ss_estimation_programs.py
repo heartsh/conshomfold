@@ -14,17 +14,17 @@ import shutil
 def main():
   (current_work_dir_path, asset_dir_path, program_dir_path, conda_program_dir_path) = utils.get_dir_paths()
   num_of_threads = multiprocessing.cpu_count()
-  rnafamprob_dir_path = asset_dir_path + "/rnafamprob"
-  neofold_dir_path = asset_dir_path + "/neofold"
+  phyloprob_dir_path = asset_dir_path + "/phyloprob"
+  phylofold_dir_path = asset_dir_path + "/phylofold"
   centroidfold_dir_path = asset_dir_path + "/centroidfold"
   contrafold_dir_path = asset_dir_path + "/contrafold"
   centroidhomfold_dir_path = asset_dir_path + "/centroidhomfold"
   turbofold_dir_path = asset_dir_path + "/turbofold"
   temp_dir_path = "/tmp/run_ss_estimation_programs_%s" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
-  if not os.path.isdir(rnafamprob_dir_path):
-    os.mkdir(rnafamprob_dir_path)
-  if not os.path.isdir(neofold_dir_path):
-    os.mkdir(neofold_dir_path)
+  if not os.path.isdir(phyloprob_dir_path):
+    os.mkdir(phyloprob_dir_path)
+  if not os.path.isdir(phylofold_dir_path):
+    os.mkdir(phylofold_dir_path)
   if not os.path.isdir(centroidfold_dir_path):
     os.mkdir(centroidfold_dir_path)
   if not os.path.isdir(contrafold_dir_path):
@@ -45,7 +45,7 @@ def main():
   centroidfold_params_4_elapsed_time = []
   contrafold_params_4_elapsed_time = []
   centroidhomfold_params_4_elapsed_time = []
-  rnafamprob_and_neofold_elapsed_time = 0.
+  phyloprob_and_phylofold_elapsed_time = 0.
   turbofold_elapsed_time = 0.
   for rna_file in os.listdir(rna_dir_path):
     if not rna_file.endswith(".fa"):
@@ -53,21 +53,21 @@ def main():
     print(rna_file)
     rna_file_path = os.path.join(rna_dir_path, rna_file)
     (rna_familiy_name, extension) = os.path.splitext(rna_file)
-    rnafamprob_output_dir_path = os.path.join(rnafamprob_dir_path, rna_familiy_name)
-    rnafamprob_command = "phyloprob -i " + rna_file_path + " -o " + rnafamprob_output_dir_path
+    phyloprob_output_dir_path = os.path.join(phyloprob_dir_path, rna_familiy_name)
+    phyloprob_command = "phyloprob -i " + rna_file_path + " -o " + phyloprob_output_dir_path
     begin = time.time()
-    utils.run_command(rnafamprob_command)
+    utils.run_command(phyloprob_command)
     elapsed_time = time.time() - begin
-    rnafamprob_and_neofold_elapsed_time += elapsed_time
-    bpp_mat_file_path = os.path.join(rnafamprob_output_dir_path, bpp_mat_file)
-    upp_mat_file_path = os.path.join(rnafamprob_output_dir_path, upp_mat_file)
-    neofold_output_dir_path = os.path.join(neofold_dir_path, "sss_of_" + rna_familiy_name)
+    phyloprob_and_phylofold_elapsed_time += elapsed_time
+    bpp_mat_file_path = os.path.join(phyloprob_output_dir_path, bpp_mat_file)
+    upp_mat_file_path = os.path.join(phyloprob_output_dir_path, upp_mat_file)
+    phylofold_output_dir_path = os.path.join(phylofold_dir_path, "sss_of_" + rna_familiy_name)
     centroidfold_output_dir_path = os.path.join(centroidfold_dir_path, "sss_of_" + rna_familiy_name)
     contrafold_output_dir_path = os.path.join(contrafold_dir_path, "sss_of_" + rna_familiy_name)
     centroidhomfold_output_dir_path = os.path.join(centroidhomfold_dir_path, "sss_of_" + rna_familiy_name)
     turbofold_output_dir_path = os.path.join(turbofold_dir_path, "sss_of_" + rna_familiy_name)
-    if not os.path.isdir(neofold_output_dir_path):
-      os.mkdir(neofold_output_dir_path)
+    if not os.path.isdir(phylofold_output_dir_path):
+      os.mkdir(phylofold_output_dir_path)
     if not os.path.isdir(centroidfold_output_dir_path):
       os.mkdir(centroidfold_output_dir_path)
     if not os.path.isdir(contrafold_output_dir_path):
@@ -79,13 +79,13 @@ def main():
     for gamma in gammas:
       gamma_str = str(gamma)
       output_file = "gamma=" + gamma_str + ".dat"
-      neofold_output_file_path = os.path.join(neofold_output_dir_path, output_file)
-      neofold_command = "phylofold -f " + rna_file_path + " -p " + bpp_mat_file_path + " -q " + upp_mat_file_path + " -o " + neofold_output_file_path + " --gamma " + gamma_str
+      phylofold_output_file_path = os.path.join(phylofold_output_dir_path, output_file)
+      phylofold_command = "phylofold -f " + rna_file_path + " -p " + bpp_mat_file_path + " -q " + upp_mat_file_path + " -o " + phylofold_output_file_path + " --gamma " + gamma_str
       begin = time.time()
-      utils.run_command(neofold_command)
+      utils.run_command(phylofold_command)
       elapsed_time = time.time() - begin
       if gamma == 1:
-        rnafamprob_and_neofold_elapsed_time += elapsed_time
+        phyloprob_and_phylofold_elapsed_time += elapsed_time
       centroidfold_output_file_path = os.path.join(centroidfold_output_dir_path, output_file)
       centroidfold_params.insert(0, (rna_file_path, centroidfold_output_file_path, gamma_str))
       if gamma == 1:
@@ -113,41 +113,38 @@ def main():
       turbofold_config_file.close()
       for (i, rec) in enumerate(recs):
         SeqIO.write([rec], open(os.path.join(temp_dir_path, "%d.fasta" % i), "w"), "fasta")
-      if True:
-        begin = time.time()
-        run_turbofold(turbofold_config_file_path)
-        elapsed_time = time.time() - begin
-        if gamma == 1:
-          turbofold_elapsed_time += elapsed_time
-        turbofold_output_file_contents = ""
-        for i in range(rec_seq_len):
-          ct_file_path = os.path.join(temp_dir_path, "%d.ct" % i)
-          ss_string = read_ct_file(ct_file_path)
-          turbofold_output_file_contents += ">%d\n%s\n\n" % (i, ss_string)
-        turbofold_output_file_path = os.path.join(turbofold_output_dir_path, output_file)
-        turbofold_output_file = open(turbofold_output_file_path, "w")
-        turbofold_output_file.write(turbofold_output_file_contents)
-        turbofold_output_file.close()
+      begin = time.time()
+      run_turbofold(turbofold_config_file_path)
+      elapsed_time = time.time() - begin
+      if gamma == 1:
+        turbofold_elapsed_time += elapsed_time
+      turbofold_output_file_contents = ""
+      for i in range(rec_seq_len):
+        ct_file_path = os.path.join(temp_dir_path, "%d.ct" % i)
+        ss_string = read_ct_file(ct_file_path)
+        turbofold_output_file_contents += ">%d\n%s\n\n" % (i, ss_string)
+      turbofold_output_file_path = os.path.join(turbofold_output_dir_path, output_file)
+      turbofold_output_file = open(turbofold_output_file_path, "w")
+      turbofold_output_file.write(turbofold_output_file_contents)
+      turbofold_output_file.close()
   pool = multiprocessing.Pool(num_of_threads)
-  if True:
-    begin = time.time()
-    pool.map(run_centroidfold, centroidfold_params_4_elapsed_time)
-    centroidfold_elapsed_time = time.time() - begin
-    begin = time.time()
-    pool.map(run_contrafold, contrafold_params_4_elapsed_time)
-    contrafold_elapsed_time = time.time() - begin
-    begin = time.time()
-    pool.map(run_centroidhomfold, centroidhomfold_params_4_elapsed_time)
-    centroidhomfold_elapsed_time = time.time() - begin
-    pool.map(run_centroidfold, centroidfold_params)
-    pool.map(run_contrafold, contrafold_params)
-    pool.map(run_centroidhomfold, centroidhomfold_params)
-  print("The elapsed time of the 3 RNAfamProb, McCaskill, and NeoFold programs for a test set = %f [s]." % rnafamprob_and_neofold_elapsed_time)
-  if True:
-    print("The elapsed time of the CentroidFold program with the CentroidFold algorithm for a test set = %f [s]." % centroidfold_elapsed_time)
-    print("The elapsed time of the CentroidFold program with the CONTRAfold algorithm for a test set = %f [s]." % contrafold_elapsed_time)
-    print("The elapsed time of the CentroidHomFold program for a test set = %f [s]." % centroidhomfold_elapsed_time)
-    print("The elapsed time of the TurboFold-smp program for a test set = %f [s]." % turbofold_elapsed_time)
+  begin = time.time()
+  pool.map(run_centroidfold, centroidfold_params_4_elapsed_time)
+  centroidfold_elapsed_time = time.time() - begin
+  begin = time.time()
+  pool.map(run_contrafold, contrafold_params_4_elapsed_time)
+  contrafold_elapsed_time = time.time() - begin
+  begin = time.time()
+  pool.map(run_centroidhomfold, centroidhomfold_params_4_elapsed_time)
+  centroidhomfold_elapsed_time = time.time() - begin
+  pool.map(run_centroidfold, centroidfold_params)
+  pool.map(run_contrafold, contrafold_params)
+  pool.map(run_centroidhomfold, centroidhomfold_params)
+  print("The elapsed time of the PhyloFold program for a test set = %f [s]." % phyloprob_and_phylofold_elapsed_time)
+  print("The elapsed time of the CentroidFold program with the CentroidFold algorithm for a test set = %f [s]." % centroidfold_elapsed_time)
+  print("The elapsed time of the CentroidFold program with the CONTRAfold algorithm for a test set = %f [s]." % contrafold_elapsed_time)
+  print("The elapsed time of the CentroidHomFold program for a test set = %f [s]." % centroidhomfold_elapsed_time)
+  print("The elapsed time of the TurboFold-smp program for a test set = %f [s]." % turbofold_elapsed_time)
   shutil.rmtree(temp_dir_path)
 
 def run_centroidfold(centroidfold_params):

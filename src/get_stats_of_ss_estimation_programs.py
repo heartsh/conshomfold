@@ -12,15 +12,15 @@ import math
 
 def main():
   (current_work_dir_path, asset_dir_path, program_dir_path, conda_program_dir_path) = utils.get_dir_paths()
-  neofold_ss_dir_path = asset_dir_path + "/neofold"
+  phylofold_ss_dir_path = asset_dir_path + "/phylofold"
   centroidfold_ss_dir_path = asset_dir_path + "/centroidfold"
   contrafold_ss_dir_path = asset_dir_path + "/contrafold"
   centroidhomfold_ss_dir_path = asset_dir_path + "/centroidhomfold"
   turbofold_ss_dir_path = asset_dir_path + "/turbofold"
   rna_fam_dir_path = asset_dir_path + "/sampled_rna_families"
-  neofold_ppvs = []
-  neofold_senss = []
-  neofold_fprs = []
+  phylofold_ppvs = []
+  phylofold_senss = []
+  phylofold_fprs = []
   centroidfold_ppvs = []
   centroidfold_senss = []
   centroidfold_fprs = []
@@ -36,7 +36,7 @@ def main():
   gammas = [2. ** i for i in range(-7, 11)]
   for gamma in gammas:
     gamma_str = str(gamma)
-    neofold_tp = neofold_tn = neofold_fp = neofold_fn = 0.
+    phylofold_tp = phylofold_tn = phylofold_fp = phylofold_fn = 0.
     centroidfold_tp = centroidfold_tn = centroidfold_fp = centroidfold_fn = 0.
     contrafold_tp = contrafold_tn = contrafold_fp = contrafold_fn = 0.
     centroidhomfold_tp = centroidhomfold_tn = centroidhomfold_fp = centroidhomfold_fn = 0.
@@ -49,8 +49,8 @@ def main():
       (rna_fam_name, extension) = os.path.splitext(rna_fam_file)
       ref_ss_file_path = os.path.join(rna_fam_dir_path, "sss_of_" + rna_fam_name + ".dat")
       ref_sss_and_flat_sss = utils.get_sss_and_flat_sss(utils.get_ss_strings(ref_ss_file_path))
-      neofold_estimated_ss_dir_path = os.path.join(neofold_ss_dir_path, "sss_of_" + rna_fam_name)
-      if not os.path.isdir(neofold_estimated_ss_dir_path):
+      phylofold_estimated_ss_dir_path = os.path.join(phylofold_ss_dir_path, "sss_of_" + rna_fam_name)
+      if not os.path.isdir(phylofold_estimated_ss_dir_path):
         continue
       centroidfold_estimated_ss_dir_path = os.path.join(centroidfold_ss_dir_path, "sss_of_" + rna_fam_name)
       if not os.path.isdir(centroidfold_estimated_ss_dir_path):
@@ -64,8 +64,8 @@ def main():
       turbofold_estimated_ss_dir_path = os.path.join(turbofold_ss_dir_path, "sss_of_" + rna_fam_name)
       if not os.path.isdir(turbofold_estimated_ss_dir_path):
         continue
-      neofold_estimated_ss_file_path = os.path.join(neofold_estimated_ss_dir_path, "gamma=" + gamma_str + ".dat")
-      estimated_sss_and_flat_sss = utils.get_sss_and_flat_sss(utils.get_ss_strings(neofold_estimated_ss_file_path))
+      phylofold_estimated_ss_file_path = os.path.join(phylofold_estimated_ss_dir_path, "gamma=" + gamma_str + ".dat")
+      estimated_sss_and_flat_sss = utils.get_sss_and_flat_sss(utils.get_ss_strings(phylofold_estimated_ss_file_path))
       for (estimated_ss_and_flat_ss, ref_ss_and_flat_ss, rna_seq_len) in zip(estimated_sss_and_flat_sss, ref_sss_and_flat_sss, rna_seq_lens):
         estimated_ss, estimated_flat_ss = estimated_ss_and_flat_ss
         ref_ss, ref_flat_ss = ref_ss_and_flat_ss
@@ -74,18 +74,18 @@ def main():
           ref_bin = i in ref_flat_ss
           if estimated_bin == ref_bin:
             if estimated_bin == False:
-              neofold_tn += 1
+              phylofold_tn += 1
           else:
             if estimated_bin == True:
-              neofold_fp += 1
+              phylofold_fp += 1
             else:
-              neofold_fn += 1
+              phylofold_fn += 1
           for j in range(i + 1, rna_seq_len):
             estimated_bin = (i, j) in estimated_ss
             ref_bin = (i, j) in ref_ss
             if estimated_bin == ref_bin:
               if estimated_bin == True:
-                neofold_tp += 1
+                phylofold_tp += 1
       centroidfold_estimated_ss_file_path = os.path.join(centroidfold_estimated_ss_dir_path, "gamma=" + gamma_str + ".dat")
       estimated_sss_and_flat_sss = utils.get_sss_and_flat_sss(utils.get_ss_strings(centroidfold_estimated_ss_file_path))
       for (estimated_ss_and_flat_ss, ref_ss_and_flat_ss, rna_seq_len) in zip(estimated_sss_and_flat_sss, ref_sss_and_flat_sss, rna_seq_lens):
@@ -174,12 +174,12 @@ def main():
             if estimated_bin == ref_bin:
               if estimated_bin == True:
                 turbofold_tp += 1
-    ppv = neofold_tp / (neofold_tp + neofold_fp)
-    sens = neofold_tp / (neofold_tp + neofold_fn)
-    fpr = neofold_fp / (neofold_tn + neofold_fp)
-    neofold_ppvs.insert(0, ppv)
-    neofold_senss.insert(0, sens)
-    neofold_fprs.insert(0, fpr)
+    ppv = phylofold_tp / (phylofold_tp + phylofold_fp)
+    sens = phylofold_tp / (phylofold_tp + phylofold_fn)
+    fpr = phylofold_fp / (phylofold_tn + phylofold_fp)
+    phylofold_ppvs.insert(0, ppv)
+    phylofold_senss.insert(0, sens)
+    phylofold_fprs.insert(0, fpr)
     ppv = centroidfold_tp / (centroidfold_tp + centroidfold_fp)
     sens = centroidfold_tp / (centroidfold_tp + centroidfold_fn)
     fpr = centroidfold_fp / (centroidfold_tn + centroidfold_fp)
@@ -204,9 +204,9 @@ def main():
     turbofold_ppvs.insert(0, ppv)
     turbofold_senss.insert(0, sens)
     turbofold_fprs.insert(0, fpr)
-  neofold_ppvs = numpy.array(neofold_ppvs) 
-  neofold_senss = numpy.array(neofold_senss)
-  neofold_fprs = numpy.array(neofold_fprs)
+  phylofold_ppvs = numpy.array(phylofold_ppvs) 
+  phylofold_senss = numpy.array(phylofold_senss)
+  phylofold_fprs = numpy.array(phylofold_fprs)
   centroidfold_ppvs = numpy.array(centroidfold_ppvs) 
   centroidfold_senss = numpy.array(centroidfold_senss)
   centroidfold_fprs = numpy.array(centroidfold_fprs)
@@ -219,25 +219,25 @@ def main():
   turbofold_ppvs = numpy.array(turbofold_ppvs) 
   turbofold_senss = numpy.array(turbofold_senss)
   turbofold_fprs = numpy.array(turbofold_fprs)
-  line_1, = pyplot.plot(neofold_ppvs, neofold_senss, label = "NeoFold", marker = "o", linestyle = "-")
-  line_2, = pyplot.plot(centroidfold_ppvs, centroidfold_senss, label = "CentroidFold (CentroidFold)", marker = "v", linestyle = "-")
-  line_3, = pyplot.plot(contrafold_ppvs, contrafold_senss, label = "CentroidFold (CONTRAfold)", marker = "^", linestyle = "-")
-  line_4, = pyplot.plot(centroidhomfold_ppvs, centroidhomfold_senss, label = "CentroidHomFold", marker = "s", linestyle = "-")
-  line_5, = pyplot.plot(turbofold_ppvs, turbofold_senss, label = "TurboFold-smp", marker = "p", linestyle = "-")
-  pyplot.xlabel("Positive predictive value")
-  pyplot.ylabel("Sensitivity")
-  pyplot.legend(handles = [line_1, line_2, line_3, line_4, line_5], loc = 1)
+  line_1, = pyplot.plot(phylofold_senss, phylofold_ppvs, label = "PhyloFold", marker = "o", linestyle = "-")
+  line_2, = pyplot.plot(turbofold_senss, turbofold_ppvs, label = "TurboFold-smp", marker = "p", linestyle = "-")
+  line_3, = pyplot.plot(centroidhomfold_senss, centroidhomfold_ppvs, label = "CentroidHomFold", marker = "s", linestyle = "-")
+  line_4, = pyplot.plot(centroidfold_senss, centroidfold_ppvs, label = "CentroidFold (CentroidFold)", marker = "v", linestyle = "-")
+  line_5, = pyplot.plot(contrafold_senss, contrafold_ppvs, label = "CentroidFold (CONTRAfold)", marker = "^", linestyle = "-")
+  pyplot.xlabel("Sensitivity")
+  pyplot.ylabel("Positive predictive value")
+  pyplot.legend(handles = [line_1, line_2, line_3, line_4, line_5], loc = 3)
   image_dir_path = asset_dir_path + "/images"
   if not os.path.exists(image_dir_path):
     os.mkdir(image_dir_path)
   pyplot.tight_layout()
-  pyplot.savefig(image_dir_path + "/ppvs_vs_senss_on_ss_estimation.eps", bbox_inches = "tight")
+  pyplot.savefig(image_dir_path + "/senss_vs_ppvs_on_ss_estimation.eps", bbox_inches = "tight")
   pyplot.figure()
-  line_1, = pyplot.plot(neofold_fprs, neofold_senss, label = "NeoFold", marker = "o", linestyle = "-")
-  line_2, = pyplot.plot(centroidfold_fprs, centroidfold_senss, label = "CentroidFold (CentroidFold)", marker = "v", linestyle = "-")
-  line_3, = pyplot.plot(contrafold_fprs, contrafold_senss, label = "CentroidFold (CONTRAfold)", marker = "^", linestyle = "-")
-  line_4, = pyplot.plot(centroidhomfold_fprs, centroidhomfold_senss, label = "CentroidHomFold", marker = "s", linestyle = "-")
-  line_5, = pyplot.plot(turbofold_fprs, turbofold_senss, label = "TurboFold-smp", marker = "p", linestyle = "-")
+  line_1, = pyplot.plot(phylofold_fprs, phylofold_senss, label = "PhyloFold", marker = "o", linestyle = "-")
+  line_2, = pyplot.plot(turbofold_fprs, turbofold_senss, label = "TurboFold-smp", marker = "p", linestyle = "-")
+  line_3, = pyplot.plot(centroidhomfold_fprs, centroidhomfold_senss, label = "CentroidHomFold", marker = "s", linestyle = "-")
+  line_4, = pyplot.plot(centroidfold_fprs, centroidfold_senss, label = "CentroidFold (CentroidFold)", marker = "v", linestyle = "-")
+  line_5, = pyplot.plot(contrafold_fprs, contrafold_senss, label = "CentroidFold (CONTRAfold)", marker = "^", linestyle = "-")
   pyplot.xlabel("False positive rate")
   pyplot.ylabel("Sensitivity")
   pyplot.legend(handles = [line_1, line_2, line_3, line_4, line_5], loc = 4)

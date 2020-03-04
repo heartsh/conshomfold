@@ -31,7 +31,7 @@ fn main() {
   let program_name = args[0].clone();
   let mut opts = Options::new();
   opts.reqopt("f", "input_fasta_file_path", "The path to an input FASTA file containing RNA sequences", "STR");
-  opts.reqopt("p", "input_base_pair_prob_matrix_file_path", "The path to an input file containing base-pairing probability matrices", "STR");
+  opts.reqopt("p", "input_pair_prob_matrix_file_path", "The path to an input file containing pairing probability matrices", "STR");
   opts.reqopt("q", "input_unpair_prob_matrix_file_path", "The path to an input file containing unpairing probability matrices", "STR");
   opts.reqopt("o", "output_file_path", "The path to an output file which will contain estimated secondary structures", "STR");
   opts.optopt("", "gamma", &format!("An MEA gamma (Uses {} by default)", DEFAULT_GAMMA), "FLOAT");
@@ -47,7 +47,7 @@ fn main() {
   }
   let input_fasta_file_path = matches.opt_str("f").expect("Failed to get the path to an input FASTA file containing RNA sequences from command arguments.");
   let input_fasta_file_path = Path::new(&input_fasta_file_path);
-  let input_bpp_mat_file_path = matches.opt_str("p").expect("Failed to get the path to an input file containing base-pairing probability matrices from command arguments.");
+  let input_bpp_mat_file_path = matches.opt_str("p").expect("Failed to get the path to an input file containing pairing probability matrices from command arguments.");
   let input_bpp_mat_file_path = Path::new(&input_bpp_mat_file_path);
   let input_upp_mat_file_path = matches.opt_str("q").expect("Failed to get the path to an input file containing unpairing probability matrices from command arguments.");
   let input_upp_mat_file_path = Path::new(&input_upp_mat_file_path);
@@ -67,9 +67,8 @@ fn main() {
   let mut fasta_records = FastaRecords::new();
   for fasta_record in fasta_file_reader.records() {
     let fasta_record = fasta_record.expect("Failed to read a FASTA record.");
-    let seq = unsafe {from_utf8_unchecked(fasta_record.seq()).to_uppercase().as_bytes().iter().filter(|&&base| {is_rna_base(base)}).map(|&base| {base}).collect::<Seq>()};
+    let seq = convert(fasta_record.seq());
     let seq_len = seq.len();
-    // if seq_len == 0 {continue;}
     fasta_records.push((String::from(fasta_record.id()), seq, seq_len));
   }
   let num_of_fasta_records = fasta_records.len();
@@ -127,18 +126,16 @@ fn main() {
   let _ = writer_2_output_file.write_all(buf_4_writer_2_output_file.as_bytes());
 }
 
-#[inline]
 fn print_program_usage(program_name: &str, opts: &Options) {
   let program_usage = format!("The usage of this program: {} [options]", program_name);
   print!("{}", opts.usage(&program_usage));
 }
 
-#[inline]
 fn get_mea_ss_str(mea_ss: &MeaSs, seq_len: usize) -> MeaSsStr {
   let mut mea_ss_str = vec![UNPAIRING_BASE; seq_len];
   for &(i, j) in &mea_ss.bp_pos_pairs {
-    mea_ss_str[i] = BASE_PAIRING_LEFT_BASE;
-    mea_ss_str[j] = BASE_PAIRING_RIGHT_BASE;
+    mea_ss_str[i as usize] = BASE_PAIRING_LEFT_BASE;
+    mea_ss_str[j as usize] = BASE_PAIRING_RIGHT_BASE;
   }
   mea_ss_str
 }
