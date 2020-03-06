@@ -16,7 +16,7 @@ $ cargo install phylofold
 Check if this program has been installed properly as follows:
 ```bash
 $ phyloprob
-$ phylofold
+$ phylofold # Its available command options will be displayed.
 ```
 After the test, the figures shown in the paper of the PhyloFold program can be reproduced:
 ```bash
