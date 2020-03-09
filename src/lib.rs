@@ -33,8 +33,8 @@ pub const BASE_PAIRING_RIGHT_BASE: MeaSsChar = ')' as MeaSsChar;
 pub fn phylofold(bpp_mat: &SparseProbMat, upp_mat: &Probs, seq_len: usize, gamma: Prob) -> MeaSs {
   let mut mea_mat = vec![vec![0.; seq_len]; seq_len];
   let seq_len = seq_len as Pos;
-  for sub_seq_len in 1 .. seq_len + 1 {
-    for i in 0 .. seq_len + 1 - sub_seq_len {
+  for sub_seq_len in 1 .. seq_len - 1 {
+    for i in 1 .. seq_len - sub_seq_len {
       let j = i + sub_seq_len - 1;
       let (long_i, long_j) = (i as usize, j as usize);
       if i == j {
@@ -63,9 +63,9 @@ pub fn phylofold(bpp_mat: &SparseProbMat, upp_mat: &Probs, seq_len: usize, gamma
     }
   }
   let mut mea_ss = MeaSs::new();
-  let mut pos_pair_stack = vec![(0, seq_len - 1)];
+  let mut pos_pair_stack = vec![(1, seq_len - 2)];
   while pos_pair_stack.len() > 0 {
-    let pos_pair = pos_pair_stack.pop().expect("Failed to pop an element of a vector.");
+    let pos_pair = pos_pair_stack.pop().unwrap();
     let (i, j) = pos_pair;
     if j <= i {continue;}
     let (long_i, long_j) = (i as usize, j as usize);
@@ -88,6 +88,6 @@ pub fn phylofold(bpp_mat: &SparseProbMat, upp_mat: &Probs, seq_len: usize, gamma
       }
     }
   }
-  mea_ss.ea = mea_mat[0][seq_len as usize - 1];
+  mea_ss.ea = mea_mat[1][seq_len as usize - 2];
   mea_ss
 }

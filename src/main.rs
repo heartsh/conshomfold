@@ -1,39 +1,27 @@
 extern crate phylofold;
-extern crate getopts;
-extern crate scoped_threadpool;
 extern crate bio;
-extern crate itertools;
 extern crate num_cpus;
 
 use phylofold::*;
-use getopts::Options;
-use self::scoped_threadpool::Pool;
 use std::env;
 use std::path::Path;
 use bio::io::fasta::Reader;
 use std::io::prelude::*;
-use std::io::{BufReader, BufWriter};
+use std::io::BufWriter;
 use std::fs::File;
-use itertools::multizip;
-
-type Arg = String;
-type NumOfThreads = u32;
-type FastaId = String;
-type FastaRecord = (FastaId, Seq, usize);
-type FastaRecords = Vec<FastaRecord>;
-type Strings = Vec<String>;
 
 const DEFAULT_GAMMA: Prob = 1.;
-const VERSION: &'static str = "0.1.0";
 
 fn main() {
   let args = env::args().collect::<Vec<Arg>>();
   let program_name = args[0].clone();
   let mut opts = Options::new();
-  opts.reqopt("f", "input_fasta_file_path", "The path to an input FASTA file containing RNA sequences", "STR");
-  opts.reqopt("p", "input_pair_prob_matrix_file_path", "The path to an input file containing pairing probability matrices", "STR");
-  opts.reqopt("q", "input_unpair_prob_matrix_file_path", "The path to an input file containing unpairing probability matrices", "STR");
-  opts.reqopt("o", "output_file_path", "The path to an output file which will contain estimated secondary structures", "STR");
+  opts.reqopt("i", "input_file_path", "The path to an input FASTA file that contains RNA sequences", "STR");
+  opts.reqopt("o", "output_file_path", "The path to an output file", "STR");
+  opts.optopt("", "opening_gap_penalty", &format!("An opening-gap penalty (Uses {} by default)", DEFAULT_OPENING_GAP_PENALTY), "FLOAT");
+  opts.optopt("", "extending_gap_penalty", &format!("An extending-gap penalty (Uses {} by default)", DEFAULT_EXTENDING_GAP_PENALTY), "FLOAT");
+  opts.optopt("", "min_base_pair_prob", &format!("A minimum base-pairing-probability (Uses {} by default)", DEFAULT_MIN_BPP), "FLOAT");
+  opts.optopt("", "offset_4_max_gap_num", &format!("An offset for maximum numbers of gaps (Uses {} by default)", DEFAULT_OFFSET_4_MAX_GAP_NUM), "UINT");
   opts.optopt("", "gamma", &format!("An MEA gamma (Uses {} by default)", DEFAULT_GAMMA), "FLOAT");
   opts.optopt("t", "num_of_threads", "The number of threads in multithreading (Uses the number of all the threads of this computer by default)", "UINT");
   opts.optflag("h", "help", "Print a help menu");
@@ -45,97 +33,74 @@ fn main() {
     print_program_usage(&program_name, &opts);
     return;
   }
-  let input_fasta_file_path = matches.opt_str("f").expect("Failed to get the path to an input FASTA file containing RNA sequences from command arguments.");
-  let input_fasta_file_path = Path::new(&input_fasta_file_path);
-  let input_bpp_mat_file_path = matches.opt_str("p").expect("Failed to get the path to an input file containing pairing probability matrices from command arguments.");
-  let input_bpp_mat_file_path = Path::new(&input_bpp_mat_file_path);
-  let input_upp_mat_file_path = matches.opt_str("q").expect("Failed to get the path to an input file containing unpairing probability matrices from command arguments.");
-  let input_upp_mat_file_path = Path::new(&input_upp_mat_file_path);
-  let output_file_path = matches.opt_str("o").expect("Failed to get the path to an output file which will contain estimated secondary structures from command arguments.");
+  let input_file_path = matches.opt_str("i").unwrap();
+  let input_file_path = Path::new(&input_file_path);
+  let output_file_path = matches.opt_str("o").unwrap();
   let output_file_path = Path::new(&output_file_path);
+  let opening_gap_penalty = if matches.opt_present("opening_gap_penalty") {
+    matches.opt_str("opening_gap_penalty").unwrap().parse().unwrap()
+  } else {
+    DEFAULT_OPENING_GAP_PENALTY
+  };
+  let extending_gap_penalty = if matches.opt_present("extending_gap_penalty") {
+    matches.opt_str("extending_gap_penalty").unwrap().parse().unwrap()
+  } else {
+    DEFAULT_EXTENDING_GAP_PENALTY
+  };
+  let min_bpp = if matches.opt_present("min_base_pair_prob") {
+    matches.opt_str("min_base_pair_prob").unwrap().parse().unwrap()
+  } else {
+    DEFAULT_MIN_BPP
+  };
+  let offset_4_max_gap_num = if matches.opt_present("offset_4_max_gap_num") {
+    matches.opt_str("offset_4_max_gap_num").unwrap().parse().unwrap()
+  } else {
+    DEFAULT_OFFSET_4_MAX_GAP_NUM
+  };
   let gamma = if matches.opt_present("gamma") {
-    matches.opt_str("gamma").expect("Failed to get an MEA gamma from command arguments.").parse().expect("Failed to parse an MEA gamma.")
+    matches.opt_str("gamma").unwrap().parse().unwrap()
   } else {
     DEFAULT_GAMMA
   };
   let num_of_threads = if matches.opt_present("t") {
-    matches.opt_str("t").expect("Failed to get the number of threads in multithreading from command arguments.").parse().expect("Failed to parse the number of threads in multithreading.")
+    matches.opt_str("t").unwrap().parse().unwrap()
   } else {
     num_cpus::get() as NumOfThreads
   };
-  let fasta_file_reader = Reader::from_file(Path::new(&input_fasta_file_path)).expect("Failed to set a FASTA file reader.");
+  let fasta_file_reader = Reader::from_file(Path::new(&input_file_path)).unwrap();
   let mut fasta_records = FastaRecords::new();
   for fasta_record in fasta_file_reader.records() {
-    let fasta_record = fasta_record.expect("Failed to read a FASTA record.");
-    let seq = convert(fasta_record.seq());
-    let seq_len = seq.len();
-    fasta_records.push((String::from(fasta_record.id()), seq, seq_len));
+    let fasta_record = fasta_record.unwrap();
+    let mut seq = convert(fasta_record.seq());
+    seq.insert(0, PSEUDO_BASE);
+    seq.push(PSEUDO_BASE);
+    fasta_records.push(FastaRecord::new(String::from(fasta_record.id()), seq));
   }
-  let num_of_fasta_records = fasta_records.len();
-  let mut bpp_mats = vec![SparseProbMat::default(); num_of_fasta_records];
-  let mut reader_2_input_bpp_mat_file = BufReader::new(File::open(input_bpp_mat_file_path).expect("Failed to read an input file."));
-  let mut buf_4_reader_2_input_bpp_mat_file = Vec::new();
-  for _ in 0 .. 2 {
-    let _ = reader_2_input_bpp_mat_file.read_until(b'>', &mut buf_4_reader_2_input_bpp_mat_file);
-  }
-  for (i, vec) in reader_2_input_bpp_mat_file.split(b'>').enumerate() {
-    if i == num_of_fasta_records {continue;}
-    let vec = vec.expect("Failed to read an input file.");
-    let substrings = unsafe {String::from_utf8_unchecked(vec).split_whitespace().map(|string| {String::from(string)}).collect::<Strings>()};
-    let rna_id = substrings[0].parse::<RnaId>().expect("Failed to parse an RNA ID.");
-    for subsubstring in &substrings[1 ..] {
-      let subsubsubstrings = subsubstring.split(",").collect::<Vec<&str>>();
-      bpp_mats[rna_id].insert((
-        subsubsubstrings[0].parse::<Pos>().expect("Failed to parse an index."),
-        subsubsubstrings[1].parse::<Pos>().expect("Failed to parse an index.")),
-        subsubsubstrings[2].parse().expect("Failed to parse a base-pairing probability."),
-      );
-    }
-  }
-  let mut upp_mats = vec![Probs::new(); num_of_fasta_records];
-  let mut reader_2_input_upp_mat_file = BufReader::new(File::open(input_upp_mat_file_path).expect("Failed to read an input file."));
-  let mut buf_4_reader_2_input_upp_mat_file = Vec::new();
-  for _ in 0 .. 2 {
-    let _ = reader_2_input_upp_mat_file.read_until(b'>', &mut buf_4_reader_2_input_upp_mat_file);
-  }
-  for (i, vec) in reader_2_input_upp_mat_file.split(b'>').enumerate() {
-    if i == num_of_fasta_records {continue;}
-    let vec = vec.expect("Failed to read an input file.");
-    let substrings = unsafe {String::from_utf8_unchecked(vec).split_whitespace().map(|string| {String::from(string)}).collect::<Strings>()};
-    let rna_id = substrings[0].parse::<RnaId>().expect("Failed to parse an RNA ID.");
-    for subsubstring in &substrings[1 ..] {
-      let subsubsubstrings = subsubstring.split(",").collect::<Vec<&str>>();
-      upp_mats[rna_id].push(subsubsubstrings[1].parse().expect("Failed to parse a base-pairing probability."));
-    }
-  }
-  let mut mea_sss = vec![MeaSs::new(); num_of_fasta_records];
   let mut thread_pool = Pool::new(num_of_threads);
+  let (bpp_mats, upp_mats) = phyloprob(&mut thread_pool, &fasta_records, opening_gap_penalty, extending_gap_penalty, min_bpp, offset_4_max_gap_num);
+  let num_of_fasta_records = fasta_records.len();
+  let mut mea_sss = vec![MeaSs::new(); num_of_fasta_records];
   thread_pool.scoped(|scope| {
     for (mea_ss, bpp_mat, upp_mat, fasta_record) in multizip((mea_sss.iter_mut(), bpp_mats.iter(), upp_mats.iter(), fasta_records.iter())) {
       scope.execute(move || {
-        *mea_ss = phylofold(bpp_mat, upp_mat, fasta_record.2, gamma);
+        *mea_ss = phylofold(bpp_mat, upp_mat, fasta_record.seq.len(), gamma);
       });
     }
   });
-  let mut writer_2_output_file = BufWriter::new(File::create(output_file_path).expect("Failed to create an output file."));
-  let mut buf_4_writer_2_output_file = format!("; The version {} of the NeoFold program.\n; The path to the input FASTA file for computing the secondary structures (= SSs) in this file = \"{}\".\n; The path to the input base-pairing probability matrix file for computing these structures = \"{}\".\n; The path to the input unpairing probability matrix file for computing these structures = \"{}\".\n; The values of the parameters used for computing these structures are as follows.\n; \"gamma\" = {}, \"num_of_threads\" = {}.\n; Each row beginning with \">\" is with a pair of the ID of an RNA sequence and expected accuracy of the maximum-expected-accuracy SS computed from this sequence. The row next to this row is with this SS.", VERSION, input_fasta_file_path.display(), input_bpp_mat_file_path.display(), input_upp_mat_file_path.display(), gamma, num_of_threads);
+  let mut writer_2_output_file = BufWriter::new(File::create(output_file_path).unwrap());
+  let mut buf = String::new();
   for (rna_id, mea_ss) in mea_sss.iter().enumerate() {
-    let buf_4_rna_id = format!("\n\n>{},{}\n", rna_id, mea_ss.ea) + &unsafe {String::from_utf8_unchecked(get_mea_ss_str(mea_ss, fasta_records[rna_id].2))};
-    buf_4_writer_2_output_file.push_str(&buf_4_rna_id);
+    let buf_4_rna_id = format!(">{}\n", rna_id) + &unsafe {String::from_utf8_unchecked(get_mea_ss_str(mea_ss, fasta_records[rna_id].seq.len()))} + if rna_id < num_of_fasta_records - 1 {"\n"} else {""};
+    buf.push_str(&buf_4_rna_id);
   }
-  let _ = writer_2_output_file.write_all(buf_4_writer_2_output_file.as_bytes());
-}
-
-fn print_program_usage(program_name: &str, opts: &Options) {
-  let program_usage = format!("The usage of this program: {} [options]", program_name);
-  print!("{}", opts.usage(&program_usage));
+  let _ = writer_2_output_file.write_all(buf.as_bytes());
 }
 
 fn get_mea_ss_str(mea_ss: &MeaSs, seq_len: usize) -> MeaSsStr {
-  let mut mea_ss_str = vec![UNPAIRING_BASE; seq_len];
+  let mut mea_ss_str = vec![UNPAIRING_BASE; seq_len - 2];
   for &(i, j) in &mea_ss.bp_pos_pairs {
-    mea_ss_str[i as usize] = BASE_PAIRING_LEFT_BASE;
-    mea_ss_str[j as usize] = BASE_PAIRING_RIGHT_BASE;
+    mea_ss_str[i as usize - 1] = BASE_PAIRING_LEFT_BASE;
+    mea_ss_str[j as usize - 1] = BASE_PAIRING_RIGHT_BASE;
   }
   mea_ss_str
 }
