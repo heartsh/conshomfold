@@ -35,7 +35,7 @@ def main():
   turbofold_fprs = []
   gammas = [2. ** i for i in range(-7, 11)]
   for gamma in gammas:
-    gamma_str = str(gamma)
+    gamma_str = str(gamma) if gamma < 1 else str(int(gamma))
     phylofold_tp = phylofold_tn = phylofold_fp = phylofold_fn = 0.
     centroidfold_tp = centroidfold_tn = centroidfold_fp = centroidfold_fn = 0.
     contrafold_tp = contrafold_tn = contrafold_fp = contrafold_fn = 0.

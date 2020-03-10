@@ -9,20 +9,23 @@ use bio::io::fasta::Reader;
 use std::io::prelude::*;
 use std::io::BufWriter;
 use std::fs::File;
+use std::fs::create_dir;
 
-const DEFAULT_GAMMA: Prob = 1.;
+const DEFAULT_MIN_POW_OF_2: i32 = -7;
+const DEFAULT_MAX_POW_OF_2: i32 = 10;
 
 fn main() {
   let args = env::args().collect::<Vec<Arg>>();
   let program_name = args[0].clone();
   let mut opts = Options::new();
   opts.reqopt("i", "input_file_path", "The path to an input FASTA file that contains RNA sequences", "STR");
-  opts.reqopt("o", "output_file_path", "The path to an output file", "STR");
+  opts.reqopt("o", "output_dir_path", "The path to an output directory", "STR");
   opts.optopt("", "opening_gap_penalty", &format!("An opening-gap penalty (Uses {} by default)", DEFAULT_OPENING_GAP_PENALTY), "FLOAT");
   opts.optopt("", "extending_gap_penalty", &format!("An extending-gap penalty (Uses {} by default)", DEFAULT_EXTENDING_GAP_PENALTY), "FLOAT");
   opts.optopt("", "min_base_pair_prob", &format!("A minimum base-pairing-probability (Uses {} by default)", DEFAULT_MIN_BPP), "FLOAT");
   opts.optopt("", "offset_4_max_gap_num", &format!("An offset for maximum numbers of gaps (Uses {} by default)", DEFAULT_OFFSET_4_MAX_GAP_NUM), "UINT");
-  opts.optopt("", "gamma", &format!("An MEA gamma (Uses {} by default)", DEFAULT_GAMMA), "FLOAT");
+  opts.optopt("", "min_pow_of_2", &format!("A minimum power of 2 to calculate a gamma parameter (Uses {} by default)", DEFAULT_MIN_POW_OF_2), "FLOAT");
+  opts.optopt("", "max_pow_of_2", &format!("A maximum power of 2 to calculate a gamma parameter (Uses {} by default)", DEFAULT_MAX_POW_OF_2), "FLOAT");
   opts.optopt("t", "num_of_threads", "The number of threads in multithreading (Uses the number of all the threads of this computer by default)", "UINT");
   opts.optflag("h", "help", "Print a help menu");
   let matches = match opts.parse(&args[1 ..]) {
@@ -35,8 +38,8 @@ fn main() {
   }
   let input_file_path = matches.opt_str("i").unwrap();
   let input_file_path = Path::new(&input_file_path);
-  let output_file_path = matches.opt_str("o").unwrap();
-  let output_file_path = Path::new(&output_file_path);
+  let output_dir_path = matches.opt_str("o").unwrap();
+  let output_dir_path = Path::new(&output_dir_path);
   let opening_gap_penalty = if matches.opt_present("opening_gap_penalty") {
     matches.opt_str("opening_gap_penalty").unwrap().parse().unwrap()
   } else {
@@ -57,10 +60,15 @@ fn main() {
   } else {
     DEFAULT_OFFSET_4_MAX_GAP_NUM
   };
-  let gamma = if matches.opt_present("gamma") {
-    matches.opt_str("gamma").unwrap().parse().unwrap()
+  let min_pow_of_2 = if matches.opt_present("min_pow_of_2") {
+    matches.opt_str("min_pow_of_2").unwrap().parse().unwrap()
   } else {
-    DEFAULT_GAMMA
+    DEFAULT_MIN_POW_OF_2
+  };
+  let max_pow_of_2 = if matches.opt_present("max_pow_of_2") {
+    matches.opt_str("max_pow_of_2").unwrap().parse().unwrap()
+  } else {
+    DEFAULT_MAX_POW_OF_2
   };
   let num_of_threads = if matches.opt_present("t") {
     matches.opt_str("t").unwrap().parse().unwrap()
@@ -78,19 +86,30 @@ fn main() {
   }
   let mut thread_pool = Pool::new(num_of_threads);
   let (bpp_mats, upp_mats) = phyloprob(&mut thread_pool, &fasta_records, opening_gap_penalty, extending_gap_penalty, min_bpp, offset_4_max_gap_num);
-  let num_of_fasta_records = fasta_records.len();
-  let mut mea_sss = vec![MeaSs::new(); num_of_fasta_records];
-  thread_pool.scoped(|scope| {
-    for (mea_ss, bpp_mat, upp_mat, fasta_record) in multizip((mea_sss.iter_mut(), bpp_mats.iter(), upp_mats.iter(), fasta_records.iter())) {
+  if !output_dir_path.exists() {
+    let _ = create_dir(output_dir_path);
+  }
+  for pow_of_2 in min_pow_of_2 .. max_pow_of_2 + 1 {
+    let gamma = (2. as Prob).powi(pow_of_2);
+    let ref ref_2_bpp_mats = bpp_mats;
+    let ref ref_2_upp_mats = upp_mats;
+    let ref ref_2_fasta_records = fasta_records;
+    thread_pool.scoped(|scope| {
+      let output_file_path = output_dir_path.join(&format!("gamma={}.dat", gamma));
       scope.execute(move || {
-        *mea_ss = phylofold(bpp_mat, upp_mat, fasta_record.seq.len(), gamma);
+        compute_and_write_mea_sss(ref_2_bpp_mats, ref_2_upp_mats, ref_2_fasta_records, gamma, &output_file_path);
       });
-    }
-  });
-  let mut writer_2_output_file = BufWriter::new(File::create(output_file_path).unwrap());
+    });
+  }
+}
+
+fn compute_and_write_mea_sss(bpp_mats: &ProbMats, upp_mats: &Prob1dMats, fasta_records: &FastaRecords, gamma: Prob, output_file_path: &Path) {
+  let num_of_fasta_records = fasta_records.len();
   let mut buf = String::new();
-  for (rna_id, mea_ss) in mea_sss.iter().enumerate() {
-    let buf_4_rna_id = format!(">{}\n", rna_id) + &unsafe {String::from_utf8_unchecked(get_mea_ss_str(mea_ss, fasta_records[rna_id].seq.len()))} + if rna_id < num_of_fasta_records - 1 {"\n"} else {""};
+  let mut writer_2_output_file = BufWriter::new(File::create(output_file_path).unwrap());
+  for (rna_id, fasta_record) in fasta_records.iter().enumerate() {
+    let mea_ss = phylofold(&bpp_mats[rna_id], &upp_mats[rna_id], fasta_record.seq.len(), gamma);
+    let buf_4_rna_id = format!(">{}\n", rna_id) + &unsafe {String::from_utf8_unchecked(get_mea_ss_str(&mea_ss, fasta_records[rna_id].seq.len()))} + if rna_id < num_of_fasta_records - 1 {"\n"} else {""};
     buf.push_str(&buf_4_rna_id);
   }
   let _ = writer_2_output_file.write_all(buf.as_bytes());

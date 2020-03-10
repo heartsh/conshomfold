@@ -62,16 +62,14 @@ def main():
       os.mkdir(centroidhomfold_output_dir_path)
     if not os.path.isdir(turbofold_output_dir_path):
       os.mkdir(turbofold_output_dir_path)
+    phylofold_command = "phylofold -i " + rna_file_path + " -o " + phylofold_output_dir_path
+    begin = time.time()
+    utils.run_command(phylofold_command)
+    elapsed_time = time.time() - begin
+    phylofold_elapsed_time += elapsed_time
     for gamma in gammas:
-      gamma_str = str(gamma)
+      gamma_str = str(gamma) if gamma < 1 else str(int(gamma))
       output_file = "gamma=" + gamma_str + ".dat"
-      phylofold_output_file_path = os.path.join(phylofold_output_dir_path, output_file)
-      phylofold_command = "phylofold -i " + rna_file_path + " -o " + phylofold_output_file_path + " --gamma " + gamma_str
-      begin = time.time()
-      utils.run_command(phylofold_command)
-      elapsed_time = time.time() - begin
-      if gamma == 1:
-        phylofold_elapsed_time += elapsed_time
       centroidfold_output_file_path = os.path.join(centroidfold_output_dir_path, output_file)
       centroidfold_params.insert(0, (rna_file_path, centroidfold_output_file_path, gamma_str))
       if gamma == 1:
