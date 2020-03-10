@@ -88,10 +88,9 @@ def main():
       if gamma == 1:
         turbofold_params_4_elapsed_time.insert(0, (rna_file_path, turbofold_output_file_path, gamma, temp_dir_path, rna_family_name, sub_thread_num))
   pool = multiprocessing.Pool(int(num_of_threads / sub_thread_num))
-  if False:
-    begin = time.time()
-    pool.map(utils.run_command, phylofold_params)
-    phylofold_elapsed_time = time.time() - begin
+  begin = time.time()
+  pool.map(utils.run_command, phylofold_params)
+  phylofold_elapsed_time = time.time() - begin
   pool.map(run_turbofold, turbofold_params)
   begin = time.time()
   pool.map(run_turbofold, turbofold_params_4_elapsed_time)
