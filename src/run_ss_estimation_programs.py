@@ -34,6 +34,9 @@ def main():
     os.mkdir(temp_dir_path)
   rna_dir_path = asset_dir_path + "/sampled_rna_families"
   gammas = [2. ** i for i in range(-7, 11)]
+  phylofold_params = []
+  turbofold_params = []
+  turbofold_params_4_elapsed_time = []
   centroidfold_params = []
   contrafold_params = []
   centroidhomfold_params = []
@@ -42,16 +45,17 @@ def main():
   centroidhomfold_params_4_elapsed_time = []
   phylofold_elapsed_time = 0.
   turbofold_elapsed_time = 0.
+  sub_thread_num = 4 if num_of_threads <= 8 else 8
   for rna_file in os.listdir(rna_dir_path):
     if not rna_file.endswith(".fa"):
       continue
     rna_file_path = os.path.join(rna_dir_path, rna_file)
-    (rna_familiy_name, extension) = os.path.splitext(rna_file)
-    phylofold_output_dir_path = os.path.join(phylofold_dir_path, "sss_of_" + rna_familiy_name)
-    centroidfold_output_dir_path = os.path.join(centroidfold_dir_path, "sss_of_" + rna_familiy_name)
-    contrafold_output_dir_path = os.path.join(contrafold_dir_path, "sss_of_" + rna_familiy_name)
-    centroidhomfold_output_dir_path = os.path.join(centroidhomfold_dir_path, "sss_of_" + rna_familiy_name)
-    turbofold_output_dir_path = os.path.join(turbofold_dir_path, "sss_of_" + rna_familiy_name)
+    (rna_family_name, extension) = os.path.splitext(rna_file)
+    phylofold_output_dir_path = os.path.join(phylofold_dir_path, "sss_of_" + rna_family_name)
+    centroidfold_output_dir_path = os.path.join(centroidfold_dir_path, "sss_of_" + rna_family_name)
+    contrafold_output_dir_path = os.path.join(contrafold_dir_path, "sss_of_" + rna_family_name)
+    centroidhomfold_output_dir_path = os.path.join(centroidhomfold_dir_path, "sss_of_" + rna_family_name)
+    turbofold_output_dir_path = os.path.join(turbofold_dir_path, "sss_of_" + rna_family_name)
     if not os.path.isdir(phylofold_output_dir_path):
       os.mkdir(phylofold_output_dir_path)
     if not os.path.isdir(centroidfold_output_dir_path):
@@ -62,11 +66,8 @@ def main():
       os.mkdir(centroidhomfold_output_dir_path)
     if not os.path.isdir(turbofold_output_dir_path):
       os.mkdir(turbofold_output_dir_path)
-    phylofold_command = "phylofold -i " + rna_file_path + " -o " + phylofold_output_dir_path
-    begin = time.time()
-    utils.run_command(phylofold_command)
-    elapsed_time = time.time() - begin
-    phylofold_elapsed_time += elapsed_time
+    phylofold_command = "phylofold -t " + str(sub_thread_num) + " -i " + rna_file_path + " -o " + phylofold_output_dir_path
+    phylofold_params.insert(0, phylofold_command)
     for gamma in gammas:
       gamma_str = str(gamma) if gamma < 1 else str(int(gamma))
       output_file = "gamma=" + gamma_str + ".dat"
@@ -82,35 +83,19 @@ def main():
       centroidhomfold_params.insert(0, (rna_file_path, centroidhomfold_output_file_path, gamma_str, temp_dir_path))
       if gamma == 1:
         centroidhomfold_params_4_elapsed_time.insert(0, (rna_file_path, centroidhomfold_output_file_path, gamma_str, temp_dir_path))
-      recs = [rec for rec in SeqIO.parse(rna_file_path, "fasta")]
-      rec_seq_len = len(recs)
-      turbofold_config_file_contents = "InSeq = {"
-      for i in range(rec_seq_len):
-        turbofold_config_file_contents += "%s/%d.fasta;" % (temp_dir_path, i)
-      turbofold_config_file_contents += "}\nOutCT = {"
-      for i in range(rec_seq_len):
-        turbofold_config_file_contents += "%s/%d.ct;" % (temp_dir_path, i)
-      turbofold_config_file_contents += "}\nIterations = 1\nMode = MEA\nMeaGamma = %f\nProcessors = %d" % (gamma, num_of_threads)
-      turbofold_config_file_path = os.path.join(temp_dir_path, "turbofold_config.dat")
-      turbofold_config_file = open(turbofold_config_file_path, "w")
-      turbofold_config_file.write(turbofold_config_file_contents)
-      turbofold_config_file.close()
-      for (i, rec) in enumerate(recs):
-        SeqIO.write([rec], open(os.path.join(temp_dir_path, "%d.fasta" % i), "w"), "fasta")
-      begin = time.time()
-      run_turbofold(turbofold_config_file_path)
-      elapsed_time = time.time() - begin
-      if gamma == 1:
-        turbofold_elapsed_time += elapsed_time
-      turbofold_output_file_contents = ""
-      for i in range(rec_seq_len):
-        ct_file_path = os.path.join(temp_dir_path, "%d.ct" % i)
-        ss_string = read_ct_file(ct_file_path)
-        turbofold_output_file_contents += ">%d\n%s\n\n" % (i, ss_string)
       turbofold_output_file_path = os.path.join(turbofold_output_dir_path, output_file)
-      turbofold_output_file = open(turbofold_output_file_path, "w")
-      turbofold_output_file.write(turbofold_output_file_contents)
-      turbofold_output_file.close()
+      turbofold_params.insert(0, (rna_file_path, turbofold_output_file_path, gamma, temp_dir_path, rna_family_name, sub_thread_num))
+      if gamma == 1:
+        turbofold_params_4_elapsed_time.insert(0, (rna_file_path, turbofold_output_file_path, gamma, temp_dir_path, rna_family_name, sub_thread_num))
+  pool = multiprocessing.Pool(int(num_of_threads / sub_thread_num))
+  if False:
+    begin = time.time()
+    pool.map(utils.run_command, phylofold_params)
+    phylofold_elapsed_time = time.time() - begin
+  pool.map(run_turbofold, turbofold_params)
+  begin = time.time()
+  pool.map(run_turbofold, turbofold_params_4_elapsed_time)
+  turbofold_elapsed_time = time.time() - begin
   pool = multiprocessing.Pool(num_of_threads)
   begin = time.time()
   pool.map(run_centroidfold, centroidfold_params_4_elapsed_time)
@@ -130,6 +115,37 @@ def main():
   print("The elapsed time of the CentroidHomFold program for a test set = %f [s]." % centroidhomfold_elapsed_time)
   print("The elapsed time of the TurboFold-smp program for a test set = %f [s]." % turbofold_elapsed_time)
   shutil.rmtree(temp_dir_path)
+
+def run_turbofold(turbofold_params):
+  (rna_file_path, turbofold_output_file_path, gamma, temp_dir_path, rna_family_name, sub_thread_num) = turbofold_params
+  recs = [rec for rec in SeqIO.parse(rna_file_path, "fasta")]
+  rec_seq_len = len(recs)
+  turbofold_temp_dir_path = "%s/%s_gamma=%d" % (temp_dir_path, rna_family_name, gamma)
+  if not os.path.isdir(turbofold_temp_dir_path):
+    os.mkdir(turbofold_temp_dir_path)
+  turbofold_config_file_contents = "InSeq = {"
+  for i in range(rec_seq_len):
+    turbofold_config_file_contents += "%s/%d.fasta;" % (turbofold_temp_dir_path, i)
+  turbofold_config_file_contents += "}\nOutCT = {"
+  for i in range(rec_seq_len):
+    turbofold_config_file_contents += "%s/%d.ct;" % (turbofold_temp_dir_path, i)
+  turbofold_config_file_contents += "}\nIterations = 1\nMode = MEA\nMeaGamma = %f\nProcessors = %d" % (gamma, sub_thread_num)
+  turbofold_config_file_path = os.path.join(turbofold_temp_dir_path, "turbofold_config.dat")
+  turbofold_config_file = open(turbofold_config_file_path, "w")
+  turbofold_config_file.write(turbofold_config_file_contents)
+  turbofold_config_file.close()
+  for (i, rec) in enumerate(recs):
+    SeqIO.write([rec], open(os.path.join(turbofold_temp_dir_path, "%d.fasta" % i), "w"), "fasta")
+  turbofold_command = "TurboFold-smp " + turbofold_config_file_path
+  utils.run_command(turbofold_command)
+  turbofold_output_file_contents = ""
+  for i in range(rec_seq_len):
+    ct_file_path = os.path.join(turbofold_temp_dir_path, "%d.ct" % i)
+    ss_string = read_ct_file(ct_file_path)
+    turbofold_output_file_contents += ">%d\n%s\n\n" % (i, ss_string)
+  turbofold_output_file = open(turbofold_output_file_path, "w")
+  turbofold_output_file.write(turbofold_output_file_contents)
+  turbofold_output_file.close()
 
 def run_centroidfold(centroidfold_params):
   (rna_file_path, centroidfold_output_file_path, gamma_str) = centroidfold_params
@@ -173,10 +189,6 @@ def run_centroidhomfold(centroidhomfold_params):
     centroidhomfold_output_buf += ">%d\n%s\n\n" % (i, str(output).split("\\n")[2].split()[0])
   centroidhomfold_output_file.write(centroidhomfold_output_buf)
   centroidhomfold_output_file.close()
-
-def run_turbofold(turbofold_config_file_path):
-  turbofold_command = "TurboFold-smp " + turbofold_config_file_path
-  utils.run_command(turbofold_command)
 
 def read_ct_file(ct_file_path):
   ct_file = open(ct_file_path, "r")
