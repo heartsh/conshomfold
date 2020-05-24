@@ -11,7 +11,8 @@ license = "MIT"
 [dependencies]
 bio = "0.20"
 num_cpus = "1.0"
-phyloprob = "0.1"
+# phyloprob = "0.1"
+phyloprob = {path = "../phyloprob"}
 
 [lib]
 path = "src/lib.rs"

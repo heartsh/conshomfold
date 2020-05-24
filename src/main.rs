@@ -20,8 +20,6 @@ fn main() {
   let mut opts = Options::new();
   opts.reqopt("i", "input_file_path", "The path to an input FASTA file that contains RNA sequences", "STR");
   opts.reqopt("o", "output_dir_path", "The path to an output directory", "STR");
-  opts.optopt("", "opening_gap_penalty", &format!("An opening-gap penalty (Uses {} by default)", DEFAULT_OPENING_GAP_PENALTY), "FLOAT");
-  opts.optopt("", "extending_gap_penalty", &format!("An extending-gap penalty (Uses {} by default)", DEFAULT_EXTENDING_GAP_PENALTY), "FLOAT");
   opts.optopt("", "min_base_pair_prob", &format!("A minimum base-pairing-probability (Uses {} by default)", DEFAULT_MIN_BPP), "FLOAT");
   opts.optopt("", "offset_4_max_gap_num", &format!("An offset for maximum numbers of gaps (Uses {} by default)", DEFAULT_OFFSET_4_MAX_GAP_NUM), "UINT");
   opts.optopt("", "min_pow_of_2", &format!("A minimum power of 2 to calculate a gamma parameter (Uses {} by default)", DEFAULT_MIN_POW_OF_2), "FLOAT");
@@ -40,16 +38,6 @@ fn main() {
   let input_file_path = Path::new(&input_file_path);
   let output_dir_path = matches.opt_str("o").unwrap();
   let output_dir_path = Path::new(&output_dir_path);
-  let opening_gap_penalty = if matches.opt_present("opening_gap_penalty") {
-    matches.opt_str("opening_gap_penalty").unwrap().parse().unwrap()
-  } else {
-    DEFAULT_OPENING_GAP_PENALTY
-  };
-  let extending_gap_penalty = if matches.opt_present("extending_gap_penalty") {
-    matches.opt_str("extending_gap_penalty").unwrap().parse().unwrap()
-  } else {
-    DEFAULT_EXTENDING_GAP_PENALTY
-  };
   let min_bpp = if matches.opt_present("min_base_pair_prob") {
     matches.opt_str("min_base_pair_prob").unwrap().parse().unwrap()
   } else {
@@ -85,30 +73,30 @@ fn main() {
     fasta_records.push(FastaRecord::new(String::from(fasta_record.id()), seq));
   }
   let mut thread_pool = Pool::new(num_of_threads);
-  let (bpp_mats, upp_mats) = phyloprob(&mut thread_pool, &fasta_records, opening_gap_penalty, extending_gap_penalty, min_bpp, offset_4_max_gap_num);
+  let prob_mat_sets = phyloprob(&mut thread_pool, &fasta_records, min_bpp, offset_4_max_gap_num);
   if !output_dir_path.exists() {
     let _ = create_dir(output_dir_path);
   }
-  for pow_of_2 in min_pow_of_2 .. max_pow_of_2 + 1 {
-    let gamma = (2. as Prob).powi(pow_of_2);
-    let ref ref_2_bpp_mats = bpp_mats;
-    let ref ref_2_upp_mats = upp_mats;
-    let ref ref_2_fasta_records = fasta_records;
-    thread_pool.scoped(|scope| {
+  thread_pool.scoped(|scope| {
+    for pow_of_2 in min_pow_of_2 .. max_pow_of_2 + 1 {
+      let gamma = (2. as Prob).powi(pow_of_2);
+      let ref ref_2_prob_mat_sets = prob_mat_sets;
+      let ref ref_2_fasta_records = fasta_records;
       let output_file_path = output_dir_path.join(&format!("gamma={}.dat", gamma));
       scope.execute(move || {
-        compute_and_write_mea_sss(ref_2_bpp_mats, ref_2_upp_mats, ref_2_fasta_records, gamma, &output_file_path);
+        compute_and_write_mea_sss(ref_2_prob_mat_sets, ref_2_fasta_records, gamma, &output_file_path);
       });
-    });
-  }
+    }
+  });
 }
 
-fn compute_and_write_mea_sss(bpp_mats: &ProbMats, upp_mats: &Prob1dMats, fasta_records: &FastaRecords, gamma: Prob, output_file_path: &Path) {
+fn compute_and_write_mea_sss(prob_mat_sets: &ProbMatSets, fasta_records: &FastaRecords, gamma: Prob, output_file_path: &Path) {
   let num_of_fasta_records = fasta_records.len();
   let mut buf = String::new();
   let mut writer_2_output_file = BufWriter::new(File::create(output_file_path).unwrap());
   for (rna_id, fasta_record) in fasta_records.iter().enumerate() {
-    let mea_ss = phylofold(&bpp_mats[rna_id], &upp_mats[rna_id], fasta_record.seq.len(), gamma);
+    let ref prob_mats = prob_mat_sets[rna_id];
+    let mea_ss = phylofold(&prob_mats.max_bpp_mat, &prob_mats.max_upp_mat, fasta_record.seq.len(), gamma);
     let buf_4_rna_id = format!(">{}\n", rna_id) + &unsafe {String::from_utf8_unchecked(get_mea_ss_str(&mea_ss, fasta_records[rna_id].seq.len()))} + if rna_id < num_of_fasta_records - 1 {"\n"} else {""};
     buf.push_str(&buf_4_rna_id);
   }

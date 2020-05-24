@@ -9,11 +9,11 @@ pub struct MeaSs {
   pub ea: Mea,
 }
 pub type Meas = Vec<Mea>;
-pub type MeaMat = FxHashMap<PosPair, Mea>;
+pub type MeaMat = HashMap<PosPair, Mea>;
 pub type Poss = Vec<Pos>;
-pub type PosSeqsWithPoss = FxHashMap<Pos, Poss>;
+pub type PosSeqsWithPoss = HashMap<Pos, Poss>;
 pub type PosPairs = Vec<PosPair>;
-pub type PosPairSeqsWithPosPairs = FxHashMap<PosPair, PosPairs>;
+pub type PosPairSeqsWithPosPairs = HashMap<PosPair, PosPairs>;
 pub type MeaSsChar = u8;
 pub type MeaSsStr = Vec<MeaSsChar>;
 
@@ -47,13 +47,15 @@ pub fn phylofold(bpp_mat: &SparseProbMat, upp_mat: &Probs, seq_len: usize, gamma
         mea = ea;
       }
       let pos_pair = (i, j);
-      if bpp_mat.contains_key(&pos_pair) {
-        let ea = mea_mat[long_i + 1][long_j - 1] + gamma * bpp_mat[&pos_pair];
-        if ea > mea {
-          mea = ea;
-        }
+      match bpp_mat.get(&pos_pair) {
+        Some(&bpp) => {
+          let ea = mea_mat[long_i + 1][long_j - 1] + gamma * bpp;
+          if ea > mea {
+            mea = ea;
+          }
+        }, None => {},
       }
-      for k in long_i .. long_j {
+      for k in long_i + 1 .. long_j {
         let ea = mea_mat[long_i][k] + mea_mat[k + 1][long_j];
         if ea > mea {
           mea = ea;
@@ -78,7 +80,7 @@ pub fn phylofold(bpp_mat: &SparseProbMat, upp_mat: &Probs, seq_len: usize, gamma
       pos_pair_stack.push((i + 1, j - 1));
       mea_ss.bp_pos_pairs.push(pos_pair);
     } else {
-      for k in i .. j {
+      for k in i + 1 .. j {
         let long_k = k as usize;
         if mea == mea_mat[long_i][long_k] + mea_mat[long_k + 1][long_j] {
           pos_pair_stack.push((i, k));

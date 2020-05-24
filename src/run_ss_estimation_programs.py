@@ -91,28 +91,29 @@ def main():
   begin = time.time()
   pool.map(utils.run_command, phylofold_params)
   phylofold_elapsed_time = time.time() - begin
-  pool.map(run_turbofold, turbofold_params)
-  begin = time.time()
-  pool.map(run_turbofold, turbofold_params_4_elapsed_time)
-  turbofold_elapsed_time = time.time() - begin
-  pool = multiprocessing.Pool(num_of_threads)
-  begin = time.time()
-  pool.map(run_centroidfold, centroidfold_params_4_elapsed_time)
-  centroidfold_elapsed_time = time.time() - begin
-  begin = time.time()
-  pool.map(run_contrafold, contrafold_params_4_elapsed_time)
-  contrafold_elapsed_time = time.time() - begin
-  begin = time.time()
-  pool.map(run_centroidhomfold, centroidhomfold_params_4_elapsed_time)
-  centroidhomfold_elapsed_time = time.time() - begin
-  pool.map(run_centroidfold, centroidfold_params)
-  pool.map(run_contrafold, contrafold_params)
-  pool.map(run_centroidhomfold, centroidhomfold_params)
   print("The elapsed time of the PhyloFold program for a test set = %f [s]." % phylofold_elapsed_time)
-  print("The elapsed time of the CentroidFold program with the CentroidFold algorithm for a test set = %f [s]." % centroidfold_elapsed_time)
-  print("The elapsed time of the CentroidFold program with the CONTRAfold algorithm for a test set = %f [s]." % contrafold_elapsed_time)
-  print("The elapsed time of the CentroidHomFold program for a test set = %f [s]." % centroidhomfold_elapsed_time)
-  print("The elapsed time of the TurboFold-smp program for a test set = %f [s]." % turbofold_elapsed_time)
+  if False:
+    pool.map(run_turbofold, turbofold_params)
+    begin = time.time()
+    pool.map(run_turbofold, turbofold_params_4_elapsed_time)
+    turbofold_elapsed_time = time.time() - begin
+    pool = multiprocessing.Pool(num_of_threads)
+    begin = time.time()
+    pool.map(run_centroidfold, centroidfold_params_4_elapsed_time)
+    centroidfold_elapsed_time = time.time() - begin
+    begin = time.time()
+    pool.map(run_contrafold, contrafold_params_4_elapsed_time)
+    contrafold_elapsed_time = time.time() - begin
+    begin = time.time()
+    pool.map(run_centroidhomfold, centroidhomfold_params_4_elapsed_time)
+    centroidhomfold_elapsed_time = time.time() - begin
+    pool.map(run_centroidfold, centroidfold_params)
+    pool.map(run_contrafold, contrafold_params)
+    pool.map(run_centroidhomfold, centroidhomfold_params)
+    print("The elapsed time of the CentroidFold program with the CentroidFold algorithm for a test set = %f [s]." % centroidfold_elapsed_time)
+    print("The elapsed time of the CentroidFold program with the CONTRAfold algorithm for a test set = %f [s]." % contrafold_elapsed_time)
+    print("The elapsed time of the CentroidHomFold program for a test set = %f [s]." % centroidhomfold_elapsed_time)
+    print("The elapsed time of the TurboFold-smp program for a test set = %f [s]." % turbofold_elapsed_time)
   shutil.rmtree(temp_dir_path)
 
 def run_turbofold(turbofold_params):
