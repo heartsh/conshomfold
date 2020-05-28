@@ -28,8 +28,12 @@ def get_ss_and_flat_ss(ss_string):
   return ss, flat_ss
 
 def get_ss_strings(ss_file_path):
-  ss_strings = [rec.seq for rec in SeqIO.parse(ss_file_path, "fasta")]
+  ss_strings = [filter(rec.seq) for rec in SeqIO.parse(ss_file_path, "fasta")]
   return ss_strings
+
+def filter(seq):
+  new_seq = str(seq).replace("A", "").replace("C", "").replace("G", "").replace("U", "")
+  return new_seq
 
 def get_sss_and_flat_sss(ss_strings):
   return list(map(get_ss_and_flat_ss, ss_strings))
