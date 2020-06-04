@@ -33,7 +33,7 @@ def main():
   turbofold_ppvs = []
   turbofold_senss = []
   turbofold_fprs = []
-  gammas = [2. ** i for i in range(-7, 11)]
+  gammas = [2. ** i for i in range(-4, 11)]
   for gamma in gammas:
     gamma_str = str(gamma) if gamma < 1 else str(int(gamma))
     phylofold_tp = phylofold_tn = phylofold_fp = phylofold_fn = 0.

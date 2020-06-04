@@ -66,7 +66,7 @@ def main():
       os.mkdir(centroidhomfold_output_dir_path)
     if not os.path.isdir(turbofold_output_dir_path):
       os.mkdir(turbofold_output_dir_path)
-    phylofold_command = "phylofold -t " + str(sub_thread_num) + " -i " + rna_file_path + " -o " + phylofold_output_dir_path
+    phylofold_command = "phylofold -u -t " + str(sub_thread_num) + " -i " + rna_file_path + " -o " + phylofold_output_dir_path
     phylofold_params.insert(0, phylofold_command)
     for gamma in gammas:
       gamma_str = str(gamma) if gamma < 1 else str(int(gamma))
