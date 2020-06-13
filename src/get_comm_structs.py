@@ -219,7 +219,7 @@ def main():
   pyplot.savefig(image_dir_path + "/comm_struct_2.eps", bbox_inches = "tight")
   pyplot.clf()
   stat_dir_path = asset_dir_path + "/homologs_of_pri_miR_16_2"
-  ss_file_path = asset_dir_path + "/ref_struct_of_pri_miR_16_2.dat"
+  ss_file_path = asset_dir_path + "/ref_struct_of_pri_miR_16_2.fa"
   sss = [rec for rec in SeqIO.parse(ss_file_path, "fasta")];
   (ss, flat_ss) = utils.get_ss_and_flat_ss(sss[0])
   labels = {}

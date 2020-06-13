@@ -1,9 +1,9 @@
 [package]
-name = "phylofold"
+name = "consfold"
 version = "0.1.2"
 authors = ["heartsh <heartsh@heartsh.io>"]
-description = "PhyloFold Program, which Predicts RNA Single Secondary Structures to Incorporate Phylogeny among Homologs"
-repository = "https://github.com/heartsh/phylofold"
+description = "ConsFold, which Predicts RNA Single Secondary Structures to Consider Sparse RNA Structural Alignments"
+repository = "https://github.com/heartsh/consfold"
 readme = "README.md"
 keywords = ["bioinformatics", "rna", "secondary-structure"]
 license = "MIT"
@@ -11,9 +11,9 @@ license = "MIT"
 [dependencies]
 bio = "0.20"
 num_cpus = "1.0"
-# phyloprob = "0.1"
-phyloprob = {path = "../phyloprob"}
+# consprob = "0.1"
+consprob = {path = "../consprob"}
 
 [lib]
 path = "src/lib.rs"
-name = "phylofold"
+name = "consfold"

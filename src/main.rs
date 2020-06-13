@@ -1,8 +1,8 @@
-extern crate phylofold;
+extern crate consfold;
 extern crate bio;
 extern crate num_cpus;
 
-use phylofold::*;
+use consfold::*;
 use std::env;
 use std::path::Path;
 use bio::io::fasta::Reader;
@@ -81,7 +81,7 @@ fn main() {
     fasta_records.push(FastaRecord::new(String::from(fasta_record.id()), seq));
   }
   let mut thread_pool = Pool::new(num_of_threads);
-  let prob_mat_sets = phyloprob(&mut thread_pool, &fasta_records, min_bpp, offset_4_max_gap_num, uses_bpps, produces_access_probs);
+  let prob_mat_sets = consprob(&mut thread_pool, &fasta_records, min_bpp, offset_4_max_gap_num, uses_bpps, produces_access_probs);
   if !output_dir_path.exists() {
     let _ = create_dir(output_dir_path);
   }
@@ -93,7 +93,7 @@ fn main() {
       for ((rna_id, fasta_record), mea_ss) in fasta_records.iter().enumerate().zip(mea_sss.iter_mut()) {
         let ref prob_mats = prob_mat_sets[rna_id];
         scope.execute(move || {
-          *mea_ss = phylofold(&prob_mats.bpp_mat, &prob_mats.upp_mat, fasta_record.seq.len(), GAMMA_4_BENCH);
+          *mea_ss = consfold(&prob_mats.bpp_mat, &prob_mats.upp_mat, fasta_record.seq.len(), GAMMA_4_BENCH);
         });
       }
     });
@@ -128,7 +128,7 @@ fn compute_and_write_mea_sss(prob_mat_sets: &ProbMatSets, fasta_records: &FastaR
   let mut writer_2_output_file = BufWriter::new(File::create(output_file_path).unwrap());
   for (rna_id, fasta_record) in fasta_records.iter().enumerate() {
     let ref prob_mats = prob_mat_sets[rna_id];
-    let mea_ss = phylofold(&prob_mats.bpp_mat, &prob_mats.upp_mat, fasta_record.seq.len(), gamma);
+    let mea_ss = consfold(&prob_mats.bpp_mat, &prob_mats.upp_mat, fasta_record.seq.len(), gamma);
     let buf_4_rna_id = format!(">{}\n", rna_id) + &unsafe {String::from_utf8_unchecked(get_mea_ss_str(&mea_ss, fasta_records[rna_id].seq.len()))} + if rna_id < num_of_fasta_records - 1 {"\n"} else {""};
     buf.push_str(&buf_4_rna_id);
   }

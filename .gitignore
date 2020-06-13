@@ -3,6 +3,7 @@
 target
 !*.rs
 !*.py
+!*.fa
 !assets/rna_families/*
 !assets/sampled_rna_families/*
 !Cargo.toml

@@ -1,6 +1,6 @@
-extern crate phyloprob;
+extern crate consprob;
 
-pub use phyloprob::*;
+pub use consprob::*;
 
 pub type Mea = Prob;
 #[derive(Clone)]
@@ -30,7 +30,7 @@ pub const UNPAIRING_BASE: MeaSsChar = '.' as MeaSsChar;
 pub const BASE_PAIRING_LEFT_BASE: MeaSsChar = '(' as MeaSsChar;
 pub const BASE_PAIRING_RIGHT_BASE: MeaSsChar = ')' as MeaSsChar;
 
-pub fn phylofold(bpp_mat: &SparseProbMat, upp_mat: &Probs, seq_len: usize, gamma: Prob) -> MeaSs {
+pub fn consfold(bpp_mat: &SparseProbMat, upp_mat: &Probs, seq_len: usize, gamma: Prob) -> MeaSs {
   let mut mea_mat = vec![vec![0.; seq_len]; seq_len];
   let seq_len = seq_len as Pos;
   for sub_seq_len in 1 .. seq_len - 1 {
