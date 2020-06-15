@@ -88,7 +88,7 @@ fn main() {
   if takes_bench {
     let num_of_fasta_records = fasta_records.len();
     let mut mea_sss = vec![MeaSs::new(); num_of_fasta_records];
-    let output_file_path = output_dir_path.join(&format!("gamma={}.dat", GAMMA_4_BENCH));
+    let output_file_path = output_dir_path.join(&format!("gamma={}.fa", GAMMA_4_BENCH));
     thread_pool.scoped(|scope| {
       for ((rna_id, fasta_record), mea_ss) in fasta_records.iter().enumerate().zip(mea_sss.iter_mut()) {
         let ref prob_mats = prob_mat_sets[rna_id];
@@ -110,7 +110,7 @@ fn main() {
         let gamma = (2. as Prob).powi(pow_of_2);
         let ref ref_2_prob_mat_sets = prob_mat_sets;
         let ref ref_2_fasta_records = fasta_records;
-        let output_file_path = output_dir_path.join(&format!("gamma={}.dat", gamma));
+        let output_file_path = output_dir_path.join(&format!("gamma={}.fa", gamma));
         scope.execute(move || {
           compute_and_write_mea_sss(ref_2_prob_mat_sets, ref_2_fasta_records, gamma, &output_file_path);
         });

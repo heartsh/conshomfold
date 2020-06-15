@@ -4,8 +4,14 @@ target
 !*.rs
 !*.py
 !*.fa
-!assets/rna_families/*
-!assets/sampled_rna_families/*
+assets/compiled_rna_fams_*/*
+assets/ref_sss_*/*
+assets/*consfold*/*
+assets/centroidhomfold_*/*
+assets/turbofold_*/*
+assets/rnafold_*/*
+assets/sampled_trnas/*
+assets/homologs_of_pri_miR_16_2/*
 !Cargo.toml
 !.gitignore
 !README.md

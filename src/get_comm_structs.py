@@ -32,7 +32,7 @@ def main():
   seq_lens = [len(seq) for seq in seqs]
   seq_len = len(seq)
   stat_dir_path = asset_dir_path + "/sampled_trnas"
-  ss_file_path = stat_dir_path + "/gamma=1024.dat"
+  ss_file_path = stat_dir_path + "/gamma=1024.fa"
   sss = [rec for rec in SeqIO.parse(ss_file_path, "fasta")];
   (ss, flat_ss) = utils.get_ss_and_flat_ss(sss[0])
   max_bpp_mat = utils.get_bpp_mats(stat_dir_path + "/max_bpp_mats.dat", seq_lens)[0]
@@ -127,7 +127,7 @@ def main():
   seq_lens = [len(seq) for seq in seqs]
   seq_len = len(seq)
   stat_dir_path = asset_dir_path + "/homologs_of_pri_miR_16_2"
-  ss_file_path = stat_dir_path + "/gamma=16.dat"
+  ss_file_path = stat_dir_path + "/gamma=8.fa"
   sss = [rec for rec in SeqIO.parse(ss_file_path, "fasta")];
   (ss, flat_ss) = utils.get_ss_and_flat_ss(sss[0])
   max_bpp_mat = utils.get_bpp_mats(stat_dir_path + "/max_bpp_mats.dat", seq_lens)[0]
