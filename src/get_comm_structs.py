@@ -297,6 +297,83 @@ def main():
     edge_labels[(i, j)] = "%.3f" % max_bpp
   pyplot.axis("off")
   pyplot.savefig(image_dir_path + "/comm_struct_3.eps", bbox_inches = "tight")
+  pyplot.clf()
+  ss_file_path = asset_dir_path + "/rnafold_homologs_of_pri_miR_16_2.fa"
+  sss = [rec for rec in SeqIO.parse(ss_file_path, "fasta")];
+  (ss, flat_ss) = utils.get_ss_and_flat_ss(sss[0])
+  graph = networkx.Graph()
+  graph.add_nodes_from([i for i in range(seq_len + 5)])
+  pos = networkx.circular_layout(graph)
+  labels = {}
+  edges = []
+  edge_weights = []
+  for (i, j) in ss:
+    max_bpp = max_bpp_mat[i, j]
+    if max_bpp == access_bpp_mat_4_2l[i, j]:
+      edges.append((i, j))
+      edge_weights.append(max_bpp)
+  networkx.draw_networkx_edges(graph, pos, edgelist = edges, edge_color = edge_weights, edge_cmap = cmap, style = "solid", width = edge_width, edge_vmin = 0, edge_vmax = 1)
+  edges = []
+  edge_weights = []
+  for (i, j) in ss:
+    max_bpp = max_bpp_mat[i, j]
+    if max_bpp == access_bpp_mat_4_ml[i, j]:
+      edges.append((i, j))
+      edge_weights.append(max_bpp)
+  networkx.draw_networkx_edges(graph, pos, edgelist = edges, edge_color = edge_weights, edge_cmap = cmap, style = "dashed", width = edge_width, edge_vmin = 0, edge_vmax = 1)
+  edges = []
+  edge_weights = []
+  for (i, j) in ss:
+    max_bpp = max_bpp_mat[i, j]
+    if max_bpp == bpp_mat_4_el[i, j]:
+      edges.append((i, j))
+      edge_weights.append(max_bpp)
+  networkx.draw_networkx_edges(graph, pos, edgelist = edges, edge_color = edge_weights, edge_cmap = cmap, style = "dotted", width = edge_width, edge_vmin = 0, edge_vmax = 1)
+  nodes = []
+  node_weights = []
+  for i in range(seq_len):
+    max_upp = max_upp_mat[i]
+    labels[i] = seq[i]
+    if (not i in flat_ss) and max_upp == upp_mat_4_2l[i]:
+      nodes.append(i)
+      node_weights.append(max_upp)
+  networkx.draw_networkx_nodes(graph, pos, nodelist = nodes, node_color = node_weights, node_shape = "o", cmap = cmap, node_size = node_size, vmin = 0, vmax = 1)
+  nodes = []
+  node_weights = []
+  for i in range(seq_len):
+    max_upp = max_upp_mat[i]
+    if (not i in flat_ss) and max_upp == upp_mat_4_ml[i]:
+      nodes.append(i)
+      node_weights.append(max_upp)
+  networkx.draw_networkx_nodes(graph, pos, nodelist = nodes, node_color = node_weights, node_shape = "p", cmap = cmap, node_size = node_size, vmin = 0, vmax = 1)
+  nodes = []
+  node_weights = []
+  for i in range(seq_len):
+    max_upp = max_upp_mat[i]
+    if (not i in flat_ss) and max_upp == upp_mat_4_el[i]:
+      nodes.append(i)
+      node_weights.append(max_upp)
+  networkx.draw_networkx_nodes(graph, pos, nodelist = nodes, node_color = node_weights, node_shape = "v", cmap = cmap, node_size = node_size, vmin = 0, vmax = 1)
+  nodes = []
+  node_weights = []
+  for i in range(seq_len):
+    max_upp = max_upp_mat[i]
+    if (not i in flat_ss) and max_upp == upp_mat_4_hl[i]:
+      nodes.append(i)
+      node_weights.append(max_upp)
+  networkx.draw_networkx_nodes(graph, pos, nodelist = nodes, node_color = node_weights, node_shape = "d", cmap = cmap, node_size = node_size, vmin = 0, vmax = 1)
+  edges = []
+  edge_weights = []
+  networkx.draw_networkx_labels(graph, pos, labels = labels, font_color = "r", font_size = label_font_size)
+  edge_labels = {}
+  for pos_pair in ss:
+    (i, j) = pos_pair
+    max_bpp = max_bpp_mat[i, j]
+    edge_labels[(i, j)] = "%.3f" % max_bpp
+  networkx.draw_networkx_edge_labels(graph, pos, edge_labels = edge_labels, font_color = "r", font_size = edge_label_font_size)
+  pyplot.colorbar(pyplot.cm.ScalarMappable(norm = matplotlib.colors.Normalize(), cmap = cmap), fraction = 0.01)
+  pyplot.axis("off")
+  pyplot.savefig(image_dir_path + "/comm_struct_4.eps", bbox_inches = "tight")
 
 if __name__ == "__main__":
   main()
