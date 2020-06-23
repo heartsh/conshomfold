@@ -6,12 +6,9 @@ target
 !*.fa
 !assets/rfam_seed_stas.sth
 !assets/capr_sampled_trnas.dat
-assets/compiled_rna_fams_*/*
-assets/ref_sss_*/*
-assets/*consfold*/*
-assets/centroidhomfold_*/*
-assets/turbofold_*/*
-assets/rnafold_*/*
+assets/compiled_rna_fams*/*
+assets/ref_sss*/*
+assets/*fold/*
 assets/sampled_trnas/*
 assets/homologs_of_pri_miR_16_2/*
 !Cargo.toml
