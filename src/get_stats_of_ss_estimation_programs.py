@@ -9,9 +9,11 @@ import os
 from sklearn.metrics import roc_curve
 import math
 from math import sqrt
+import multiprocessing
 
 def main():
   (current_work_dir_path, asset_dir_path, program_dir_path, conda_program_dir_path) = utils.get_dir_paths()
+  num_of_threads = multiprocessing.cpu_count()
   conshomfold_ppvs = []
   conshomfold_senss = []
   conshomfold_fprs = []
@@ -27,12 +29,11 @@ def main():
   centroidfold_ppvs = []
   centroidfold_senss = []
   centroidfold_fprs = []
-  rnafold_ppv = rnafold_sens = rnafold_fpr = 0.
   bpp_conshomfold_ppvs = []
   bpp_conshomfold_senss = []
   bpp_conshomfold_fprs = []
-  gammas = [2. ** i for i in range(-5, 11)]
-  # gammas = [2. ** i for i in range(-7, 11)]
+  rnafold_ppv = rnafold_sens = rnafold_fpr = 0.
+  gammas = [2. ** i for i in range(-7, 11)]
   conshomfold_f1_score = centroidhomfold_f1_score = turbofold_f1_score = rnafold_f1_score = 0.
   conshomfold_mcc = centroidhomfold_mcc = turbofold_mcc = rnafold_mcc = 0.
   bpp_conshomfold_ss_dir_path = asset_dir_path + "/bpp_conshomfold"
@@ -42,17 +43,18 @@ def main():
   contrafold_ss_dir_path = asset_dir_path + "/contrafold"
   centroidfold_ss_dir_path = asset_dir_path + "/centroidfold"
   rnafold_ss_dir_path = asset_dir_path + "/rnafold"
-  # rna_fam_dir_path = asset_dir_path + "/ref_sss"
-  rna_fam_dir_path = asset_dir_path + "/ref_sss_4_micro_bench"
+  rna_fam_dir_path = asset_dir_path + "/ref_sss"
+  # rna_fam_dir_path = asset_dir_path + "/ref_sss_4_micro_bench"
+  pool = multiprocessing.Pool(num_of_threads)
   for gamma in gammas:
+    conshomfold_count_params = []
+    centroidhomfold_count_params = []
+    turbofold_count_params = []
+    contrafold_count_params = []
+    centroidfold_count_params = []
+    rnafold_count_params = []
+    bpp_conshomfold_count_params = []
     gamma_str = str(gamma) if gamma < 1 else str(int(gamma))
-    conshomfold_tp = conshomfold_tn = conshomfold_fp = conshomfold_fn = 0.
-    bpp_conshomfold_tp = bpp_conshomfold_tn = bpp_conshomfold_fp = bpp_conshomfold_fn = 0.
-    centroidhomfold_tp = centroidhomfold_tn = centroidhomfold_fp = centroidhomfold_fn = 0.
-    turbofold_tp = turbofold_tn = turbofold_fp = turbofold_fn = 0.
-    contrafold_tp = contrafold_tn = contrafold_fp = contrafold_fn = 0.
-    centroidfold_tp = centroidfold_tn = centroidfold_fp = centroidfold_fn = 0.
-    rnafold_tp = rnafold_tn = rnafold_fp = rnafold_fn = 0.
     for rna_fam_file in os.listdir(rna_fam_dir_path):
       if not rna_fam_file.endswith(".fa"):
         continue
@@ -68,49 +70,23 @@ def main():
       contrafold_estimated_ss_dir_path = os.path.join(contrafold_ss_dir_path, rna_fam_name)
       centroidfold_estimated_ss_dir_path = os.path.join(centroidfold_ss_dir_path, rna_fam_name)
       conshomfold_estimated_ss_file_path = os.path.join(conshomfold_estimated_ss_dir_path, "gamma=" + gamma_str + ".fa")
-      tp, tn, fp, fn = get_pos_neg_counts(conshomfold_estimated_ss_file_path, ref_sss_and_flat_sss, rna_seq_lens)
-      conshomfold_tp += tp
-      conshomfold_tn += tn
-      conshomfold_fp += fp
-      conshomfold_fn += fn
+      conshomfold_count_params.insert(0, (conshomfold_estimated_ss_file_path, ref_sss_and_flat_sss, rna_seq_lens))
       if gamma >= 2.:
         bpp_conshomfold_estimated_ss_file_path = os.path.join(bpp_conshomfold_estimated_ss_dir_path, "gamma=" + gamma_str + ".fa")
-        tp, tn, fp, fn = get_pos_neg_counts(bpp_conshomfold_estimated_ss_file_path, ref_sss_and_flat_sss, rna_seq_lens)
-        bpp_conshomfold_tp += tp
-        bpp_conshomfold_tn += tn
-        bpp_conshomfold_fp += fp
-        bpp_conshomfold_fn += fn
+        bpp_conshomfold_count_params.insert(0, (bpp_conshomfold_estimated_ss_file_path, ref_sss_and_flat_sss, rna_seq_lens))
       centroidhomfold_estimated_ss_file_path = os.path.join(centroidhomfold_estimated_ss_dir_path, "gamma=" + gamma_str + ".fa")
-      tp, tn, fp, fn = get_pos_neg_counts(centroidhomfold_estimated_ss_file_path, ref_sss_and_flat_sss, rna_seq_lens)
-      centroidhomfold_tp += tp
-      centroidhomfold_tn += tn
-      centroidhomfold_fp += fp
-      centroidhomfold_fn += fn
+      centroidhomfold_count_params.insert(0, (centroidhomfold_estimated_ss_file_path, ref_sss_and_flat_sss, rna_seq_lens))
       turbofold_estimated_ss_file_path = os.path.join(turbofold_estimated_ss_dir_path, "gamma=" + gamma_str + ".fa")
-      tp, tn, fp, fn = get_pos_neg_counts(turbofold_estimated_ss_file_path, ref_sss_and_flat_sss, rna_seq_lens)
-      turbofold_tp += tp
-      turbofold_tn += tn
-      turbofold_fp += fp
-      turbofold_fn += fn
+      turbofold_count_params.insert(0, (turbofold_estimated_ss_file_path, ref_sss_and_flat_sss, rna_seq_lens))
       contrafold_estimated_ss_file_path = os.path.join(contrafold_estimated_ss_dir_path, "gamma=" + gamma_str + ".fa")
-      tp, tn, fp, fn = get_pos_neg_counts(contrafold_estimated_ss_file_path, ref_sss_and_flat_sss, rna_seq_lens)
-      contrafold_tp += tp
-      contrafold_tn += tn
-      contrafold_fp += fp
-      contrafold_fn += fn
+      contrafold_count_params.insert(0, (contrafold_estimated_ss_file_path, ref_sss_and_flat_sss, rna_seq_lens))
       centroidfold_estimated_ss_file_path = os.path.join(centroidfold_estimated_ss_dir_path, "gamma=" + gamma_str + ".fa")
-      tp, tn, fp, fn = get_pos_neg_counts(centroidfold_estimated_ss_file_path, ref_sss_and_flat_sss, rna_seq_lens)
-      centroidfold_tp += tp
-      centroidfold_tn += tn
-      centroidfold_fp += fp
-      centroidfold_fn += fn
+      centroidfold_count_params.insert(0, (centroidfold_estimated_ss_file_path, ref_sss_and_flat_sss, rna_seq_lens))
       if gamma == 1.:
         rnafold_estimated_ss_file_path = os.path.join(rnafold_ss_dir_path, rna_fam_name + ".fa")
-        tp, tn, fp, fn = get_pos_neg_counts(rnafold_estimated_ss_file_path, ref_sss_and_flat_sss, rna_seq_lens)
-        rnafold_tp += tp
-        rnafold_tn += tn
-        rnafold_fp += fp
-        rnafold_fn += fn
+        rnafold_count_params.insert(0, (rnafold_estimated_ss_file_path, ref_sss_and_flat_sss, rna_seq_lens))
+    results = pool.map(get_pos_neg_counts, conshomfold_count_params)
+    conshomfold_tp, conshomfold_tn, conshomfold_fp, conshomfold_fn = final_sum(results)
     ppv = get_ppv(conshomfold_tp, conshomfold_fp)
     sens = get_sens(conshomfold_tp, conshomfold_fn)
     fpr = get_fpr(conshomfold_tn, conshomfold_fp)
@@ -121,12 +97,16 @@ def main():
       conshomfold_f1_score = get_f1_score(ppv, sens)
       conshomfold_mcc = get_mcc(conshomfold_tp, conshomfold_tn, conshomfold_fp, conshomfold_fn)
     if gamma >= 2.:
+      results = pool.map(get_pos_neg_counts, bpp_conshomfold_count_params)
+      bpp_conshomfold_tp, bpp_conshomfold_tn, bpp_conshomfold_fp, bpp_conshomfold_fn = final_sum(results)
       ppv = get_ppv(bpp_conshomfold_tp, bpp_conshomfold_fp)
       sens = get_sens(bpp_conshomfold_tp, bpp_conshomfold_fn)
       fpr = get_fpr(bpp_conshomfold_tn, bpp_conshomfold_fp)
       bpp_conshomfold_ppvs.insert(0, ppv)
       bpp_conshomfold_senss.insert(0, sens)
       bpp_conshomfold_fprs.insert(0, fpr)
+    results = pool.map(get_pos_neg_counts, centroidhomfold_count_params)
+    centroidhomfold_tp, centroidhomfold_tn, centroidhomfold_fp, centroidhomfold_fn = final_sum(results)
     ppv = get_ppv(centroidhomfold_tp, centroidhomfold_fp)
     sens = get_sens(centroidhomfold_tp, centroidhomfold_fn)
     fpr = get_fpr(centroidhomfold_tn, centroidhomfold_fp)
@@ -136,6 +116,8 @@ def main():
     if gamma == 1.:
       centroidhomfold_f1_score = get_f1_score(ppv, sens)
       centroidhomfold_mcc = get_mcc(centroidhomfold_tp, centroidhomfold_tn, centroidhomfold_fp, centroidhomfold_fn)
+    results = pool.map(get_pos_neg_counts, turbofold_count_params)
+    turbofold_tp, turbofold_tn, turbofold_fp, turbofold_fn = final_sum(results)
     ppv = get_ppv(turbofold_tp, turbofold_fp)
     sens = get_sens(turbofold_tp, turbofold_fn)
     fpr = get_fpr(turbofold_tn, turbofold_fp)
@@ -145,6 +127,8 @@ def main():
     if gamma == 1.:
       turbofold_f1_score = get_f1_score(ppv, sens)
       turbofold_mcc = get_mcc(turbofold_tp, turbofold_tn, turbofold_fp, turbofold_fn)
+    results = pool.map(get_pos_neg_counts, contrafold_count_params)
+    contrafold_tp, contrafold_tn, contrafold_fp, contrafold_fn = final_sum(results)
     ppv = get_ppv(contrafold_tp, contrafold_fp)
     sens = get_sens(contrafold_tp, contrafold_fn)
     fpr = get_fpr(contrafold_tn, contrafold_fp)
@@ -154,6 +138,8 @@ def main():
     if gamma == 1.:
       contrafold_f1_score = get_f1_score(ppv, sens)
       contrafold_mcc = get_mcc(contrafold_tp, contrafold_tn, contrafold_fp, contrafold_fn)
+    results = pool.map(get_pos_neg_counts, centroidfold_count_params)
+    centroidfold_tp, centroidfold_tn, centroidfold_fp, centroidfold_fn = final_sum(results)
     ppv = get_ppv(centroidfold_tp, centroidfold_fp)
     sens = get_sens(centroidfold_tp, centroidfold_fn)
     fpr = get_fpr(centroidfold_tn, centroidfold_fp)
@@ -164,6 +150,8 @@ def main():
       centroidfold_f1_score = get_f1_score(ppv, sens)
       centroidfold_mcc = get_mcc(centroidfold_tp, centroidfold_tn, centroidfold_fp, centroidfold_fn)
     if gamma == 1.:
+      results = pool.map(get_pos_neg_counts, rnafold_count_params)
+      rnafold_tp, rnafold_tn, rnafold_fp, rnafold_fn = final_sum(results)
       rnafold_ppv = get_ppv(rnafold_tp, rnafold_fp)
       rnafold_sens = get_sens(rnafold_tp, rnafold_fn)
       rnafold_fpr = get_fpr(rnafold_tn, rnafold_fp)
@@ -175,7 +163,7 @@ def main():
   centroidhomfold_ppvs = numpy.array(centroidhomfold_ppvs)
   centroidhomfold_senss = numpy.array(centroidhomfold_senss)
   centroidhomfold_fprs = numpy.array(centroidhomfold_fprs)
-  urbofold_ppvs = numpy.array(turbofold_ppvs) 
+  turbofold_ppvs = numpy.array(turbofold_ppvs) 
   turbofold_senss = numpy.array(turbofold_senss)
   turbofold_fprs = numpy.array(turbofold_fprs)
   bpp_conshomfold_ppvs = numpy.array(bpp_conshomfold_ppvs)
@@ -218,7 +206,8 @@ def main():
   print("Centroidfold's MCC & F1 score = %.3f & %.3f" %(centroidfold_mcc, centroidfold_f1_score))
   print("RNAfold's MCC & F1 score = %.3f & %.3f" %(rnafold_mcc, rnafold_f1_score))
 
-def get_pos_neg_counts(estimated_ss_file_path, ref_sss_and_flat_sss, rna_seq_lens):
+def get_pos_neg_counts(params):
+  (estimated_ss_file_path, ref_sss_and_flat_sss, rna_seq_lens) = params
   tp = tn = fp = fn = 0
   estimated_sss_and_flat_sss = utils.get_sss_and_flat_sss(utils.get_ss_strings(estimated_ss_file_path))
   for (estimated_ss_and_flat_ss, ref_ss_and_flat_ss, rna_seq_len) in zip(estimated_sss_and_flat_sss, ref_sss_and_flat_sss, rna_seq_lens):
@@ -242,6 +231,15 @@ def get_pos_neg_counts(estimated_ss_file_path, ref_sss_and_flat_sss, rna_seq_len
           if estimated_bin == True:
             tp += 1
   return tp, tn, fp, fn
+
+def final_sum(results):
+  final_tp = final_tn = final_fp = final_fn = 0.
+  for tp, tn, fp, fn in results:
+    final_tp += tp
+    final_tn += tn
+    final_fp += fp
+    final_fn += fn
+  return (final_tp, final_tn, final_fp, final_fn)
 
 def get_f1_score(ppv, sens):
   return 2 * ppv * sens / (ppv + sens)

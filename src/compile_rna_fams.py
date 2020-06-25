@@ -28,25 +28,21 @@ def main():
   if not os.path.isdir(ref_ss_dir_path_4_micro_bench):
     os.mkdir(ref_ss_dir_path_4_micro_bench)
   max_sa_len = 200
-  stas = [sta for sta in AlignIO.parse(rfam_seed_sta_file_path, "stockholm") if len(sta[0]) <= max_sa_len and is_valid(sta)]
+  max_seq_num = 10
+  stas = [sta for sta in AlignIO.parse(rfam_seed_sta_file_path, "stockholm") if len(sta) <= max_seq_num and len(sta[0]) <= max_sa_len and is_valid(sta)]
   num_of_stas = len(stas)
   print("# RNA families: %d" % num_of_stas)
   sample_rate = 0.02
   num_of_samples = int(sample_rate * num_of_stas)
   print("# RNA families for micro benchmark: %d" % num_of_samples)
   sampled_stas = numpy.random.choice(stas, num_of_samples, replace = False)
-  max_seq_num = 10
   for i, sta in enumerate(stas):
     css = convert_css(sta.column_annotations["secondary_structure"])
     rna_seq_file_path = os.path.join(rna_seq_dir_path, "rna_fam_%d.fa" % i)
     ref_ss_file_path = os.path.join(ref_ss_dir_path, "rna_fam_%d.fa" % i)
     rna_seq_file = open(rna_seq_file_path, "w")
     ref_ss_file = open(ref_ss_file_path, "w")
-    num_of_seqs = len(sta)
-    indexes_are_sampled = True if num_of_seqs > max_seq_num else False
-    indexes = numpy.random.choice([k for k in range(num_of_seqs)], max_seq_num, replace = False).tolist() if indexes_are_sampled else range(num_of_seqs)
-    recs = [sta[k] for k in indexes]
-    for j, rec in enumerate(recs):
+    for j, rec in enumerate(sta):
       seq_with_gaps = str(rec.seq)
       recovered_ss = recover_ss(css, seq_with_gaps)
       seq = seq_with_gaps.replace("-", "")
@@ -58,11 +54,7 @@ def main():
     ref_ss_file_path = os.path.join(ref_ss_dir_path_4_micro_bench, "rna_fam_%d.fa" % i)
     rna_seq_file = open(rna_seq_file_path, "w")
     ref_ss_file = open(ref_ss_file_path, "w")
-    num_of_seqs = len(sta)
-    indexes_are_sampled = True if num_of_seqs > max_seq_num else False
-    indexes = numpy.random.choice([k for k in range(num_of_seqs)], max_seq_num, replace = False).tolist() if indexes_are_sampled else range(num_of_seqs)
-    recs = [sta[k] for k in indexes]
-    for j, rec in enumerate(recs):
+    for j, rec in enumerate(sta):
       seq_with_gaps = str(rec.seq)
       recovered_ss = recover_ss(css, seq_with_gaps)
       seq = seq_with_gaps.replace("-", "")
