@@ -24,10 +24,10 @@ fn main() {
   opts.optopt("", "offset_4_max_gap_num", &format!("An offset for maximum numbers of gaps (Uses {} by default)", DEFAULT_OFFSET_4_MAX_GAP_NUM), "UINT");
   opts.optopt("", "min_pow_of_2", &format!("A minimum power of 2 to calculate a gamma parameter (Uses {} by default)", DEFAULT_MIN_POW_OF_2), "FLOAT");
   opts.optopt("", "max_pow_of_2", &format!("A maximum power of 2 to calculate a gamma parameter (Uses {} by default)", DEFAULT_MAX_POW_OF_2), "FLOAT");
-  opts.optflag("u", "uses_bpp_score", "Uses base-pairing probabilities as scores of secondary structures (Not recommended due to poor accuracy)");
+  opts.optflag("u", "is_posterior_model", "Uses posterior model to score secondary structures (Not recommended due to poor accuracy)");
   opts.optopt("t", "num_of_threads", "The number of threads in multithreading (Uses the number of all the threads of this computer by default)", "UINT");
   opts.optflag("b", "takes_bench", &format!("Compute for only gamma = {} to measure running time", GAMMA_4_BENCH));
-  opts.optflag("a", "produces_access_probs", &format!("Also compute accessible probabilities"));
+  opts.optflag("a", "produces_access_probs", &format!("Also compute accessible probabilities (only for Turner model)"));
   opts.optflag("p", "outputs_probs", &format!("Output probabilities"));
   opts.optflag("h", "help", "Print a help menu");
   let matches = match opts.parse(&args[1 ..]) {
@@ -62,9 +62,9 @@ fn main() {
   } else {
     DEFAULT_MAX_POW_OF_2
   };
-  let uses_bpps = matches.opt_present("u");
+  let is_posterior_model = matches.opt_present("u");
   let takes_bench = matches.opt_present("b");
-  let produces_access_probs = matches.opt_present("a");
+  let produces_access_probs = matches.opt_present("a") & !is_posterior_model;
   let outputs_probs = matches.opt_present("p");
   let num_of_threads = if matches.opt_present("t") {
     matches.opt_str("t").unwrap().parse().unwrap()
@@ -81,7 +81,7 @@ fn main() {
     fasta_records.push(FastaRecord::new(String::from(fasta_record.id()), seq));
   }
   let mut thread_pool = Pool::new(num_of_threads);
-  let prob_mat_sets = consprob(&mut thread_pool, &fasta_records, min_bpp, offset_4_max_gap_num, uses_bpps, produces_access_probs);
+  let prob_mat_sets = consprob(&mut thread_pool, &fasta_records, min_bpp, offset_4_max_gap_num, is_posterior_model, produces_access_probs);
   if !output_dir_path.exists() {
     let _ = create_dir(output_dir_path);
   }

@@ -22,6 +22,7 @@ def main():
   conshomfold_params = []
   conshomfold_params_4_elapsed_time = []
   bpp_conshomfold_params = []
+  bpp_conshomfold_params_4_elapsed_time = []
   turbofold_params = []
   turbofold_params_4_elapsed_time = []
   centroidhomfold_params = []
@@ -52,8 +53,8 @@ def main():
     os.mkdir(rnafold_dir_path)
   if not os.path.isdir(bpp_conshomfold_dir_path):
     os.mkdir(bpp_conshomfold_dir_path)
-  rna_dir_path = asset_dir_path + "/compiled_rna_fams"
-  # rna_dir_path = asset_dir_path + "/compiled_rna_fams_4_micro_bench"
+  # rna_dir_path = asset_dir_path + "/compiled_rna_fams"
+  rna_dir_path = asset_dir_path + "/compiled_rna_fams_4_micro_bench"
   sub_thread_num = 4 if num_of_threads <= 8 else 8
   for rna_file in os.listdir(rna_dir_path):
     if not rna_file.endswith(".fa"):
@@ -83,6 +84,8 @@ def main():
     conshomfold_params_4_elapsed_time.insert(0, conshomfold_command)
     bpp_conshomfold_command = "conshomfold -u -t " + str(sub_thread_num) + " -i " + rna_file_path + " -o " + bpp_conshomfold_output_dir_path
     bpp_conshomfold_params.insert(0, bpp_conshomfold_command)
+    bpp_conshomfold_command = "conshomfold -b -u -t " + str(sub_thread_num) + " -i " + rna_file_path + " -o " + bpp_conshomfold_output_dir_path
+    bpp_conshomfold_params_4_elapsed_time.insert(0, bpp_conshomfold_command)
     rnafold_params.insert(0, (rna_file_path, rnafold_output_file_path))
     for gamma in gammas:
       gamma_str = str(gamma) if gamma < 1 else str(int(gamma))
@@ -109,6 +112,9 @@ def main():
   pool.map(utils.run_command, conshomfold_params_4_elapsed_time)
   conshomfold_elapsed_time = time.time() - begin
   pool.map(utils.run_command, bpp_conshomfold_params)
+  begin = time.time()
+  pool.map(utils.run_command, bpp_conshomfold_params_4_elapsed_time)
+  bpp_conshomfold_elapsed_time = time.time() - begin
   pool = multiprocessing.Pool(num_of_threads)
   pool.map(run_turbofold, turbofold_params)
   begin = time.time()
@@ -129,7 +135,8 @@ def main():
   begin = time.time()
   pool.map(run_rnafold, rnafold_params)
   rnafold_elapsed_time = time.time() - begin
-  print("The elapsed time of ConsHomfold = %f [s]." % conshomfold_elapsed_time)
+  print("The elapsed time of ConsHomfold (Turner) = %f [s]." % conshomfold_elapsed_time)
+  print("The elapsed time of ConsHomfold (Posterior) = %f [s]." % bpp_conshomfold_elapsed_time)
   print("The elapsed time of CentroidHomfold = %f [s]." % centroidhomfold_elapsed_time)
   print("The elapsed time of TurboFold = %f [s]." % turbofold_elapsed_time)
   print("The elapsed time of CONTRAfold = %f [s]." % contrafold_elapsed_time)
