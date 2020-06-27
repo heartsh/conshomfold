@@ -2,7 +2,6 @@
 
 import utils
 from Bio import SeqIO
-import numpy
 import seaborn
 from matplotlib import pyplot
 import os
@@ -190,14 +189,15 @@ def main():
   pyplot.tight_layout()
   pyplot.savefig(image_dir_path + "/fprs_vs_senss_on_ss_estimation.eps", bbox_inches = "tight")
   pyplot.clf()
+  gammas = [i for i in range(-7, 11)]
   line_1, = pyplot.plot(gammas, conshomfold_f1_scores, label = "ConsHomfold (Turner)", marker = "o", linestyle = "-")
   line_2, = pyplot.plot(gammas, bpp_conshomfold_f1_scores, label = "ConsHomfold (Posterior)", marker = "o", linestyle = ":")
   line_3, = pyplot.plot(gammas, turbofold_f1_scores, label = "TurboFold", marker = "p", linestyle = "-")
   line_4, = pyplot.plot(gammas, centroidhomfold_f1_scores, label = "CentroidHomfold", marker = "s", linestyle = "-")
   line_5, = pyplot.plot(gammas, contrafold_f1_scores, label = "CONTRAfold", marker = "v", linestyle = "-")
   line_6, = pyplot.plot(gammas, centroidfold_f1_scores, label = "Centroidfold", marker = "h", linestyle = "-")
-  line_7, = pyplot.plot(1., rnafold_f1_score, label = "RNAfold", marker = "d", linestyle = "-")
-  pyplot.xlabel("$\gamma$")
+  line_7, = pyplot.plot(0., rnafold_f1_score, label = "RNAfold", marker = "d", linestyle = "-")
+  pyplot.xlabel("$\log_2 \gamma$")
   pyplot.ylabel("F1 score")
   pyplot.legend(handles = [line_1, line_2, line_3, line_4, line_5, line_6, line_7], loc = "lower right")
   pyplot.tight_layout()
@@ -209,8 +209,8 @@ def main():
   line_4, = pyplot.plot(gammas, centroidhomfold_mccs, label = "CentroidHomfold", marker = "s", linestyle = "-")
   line_5, = pyplot.plot(gammas, contrafold_mccs, label = "CONTRAfold", marker = "v", linestyle = "-")
   line_6, = pyplot.plot(gammas, centroidfold_mccs, label = "Centroidfold", marker = "h", linestyle = "-")
-  line_7, = pyplot.plot(1., rnafold_mcc, label = "RNAfold", marker = "d", linestyle = "-")
-  pyplot.xlabel("$\gamma$")
+  line_7, = pyplot.plot(0., rnafold_mcc, label = "RNAfold", marker = "d", linestyle = "-")
+  pyplot.xlabel("$\log_2 \gamma$")
   pyplot.ylabel("MCC")
   pyplot.tight_layout()
   pyplot.savefig(image_dir_path + "/gammas_vs_mccs_on_ss_estimation.eps", bbox_inches = "tight")
