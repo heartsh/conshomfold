@@ -53,8 +53,8 @@ def main():
     os.mkdir(rnafold_dir_path)
   if not os.path.isdir(bpp_conshomfold_dir_path):
     os.mkdir(bpp_conshomfold_dir_path)
-  # rna_dir_path = asset_dir_path + "/compiled_rna_fams"
-  rna_dir_path = asset_dir_path + "/compiled_rna_fams_4_micro_bench"
+  rna_dir_path = asset_dir_path + "/compiled_rna_fams"
+  # rna_dir_path = asset_dir_path + "/compiled_rna_fams_4_micro_bench"
   sub_thread_num = 4 if num_of_threads <= 8 else 8
   for rna_file in os.listdir(rna_dir_path):
     if not rna_file.endswith(".fa"):
