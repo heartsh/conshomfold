@@ -64,7 +64,7 @@ fn main() {
   };
   let is_posterior_model = matches.opt_present("u");
   let takes_bench = matches.opt_present("b");
-  let produces_access_probs = matches.opt_present("a") & !is_posterior_model;
+  let produces_access_probs = matches.opt_present("a") && !is_posterior_model;
   let outputs_probs = matches.opt_present("p");
   let num_of_threads = if matches.opt_present("t") {
     matches.opt_str("t").unwrap().parse().unwrap()

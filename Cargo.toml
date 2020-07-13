@@ -11,8 +11,7 @@ license = "MIT"
 [dependencies]
 bio = "0.20"
 num_cpus = "1.0"
-# consprob = "0.1"
-consprob = {path = "../consprob"}
+consprob = "0.1"
 
 [lib]
 path = "src/lib.rs"

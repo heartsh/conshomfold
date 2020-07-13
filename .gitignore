@@ -4,6 +4,7 @@ target
 !*.rs
 !*.py
 !*.fa
+!*.tar.gz
 !assets/rfam_seed_stas.sth
 !assets/capr_sampled_trnas.dat
 assets/compiled_rna_fams*/*
