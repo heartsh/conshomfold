@@ -8,7 +8,7 @@ You can install the components with one line as follows:
 $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 The above installation is done by [Rustup](https://github.com/rust-lang-nursery/rustup.rs), so you can easily switch a compiler to use. 
-Now you can install the ConsHomfold as follows: 
+You can install the ConsHomfold as follows: 
 ```bash
 $ cargo install conshomfold
 ```
