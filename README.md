@@ -1,4 +1,4 @@
-# ConsHomfold, which Predicts RNA Single Secondary Structures to Consider Sparse RNA Structural Alignments
+# ConsHomfold, which Predicts Global Single RNA Secondary Structures to Consider Sparse Global Pairwise RNA Structural Alignments
 # Installation
 This project has been written in mainly Rust, a systems programming language.
 You need to install the Rust components, which are rustc (the Rust compiler), cargo (the Rust package manager), and the Rust standard library.
