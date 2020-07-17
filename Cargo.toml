@@ -2,7 +2,7 @@
 name = "conshomfold"
 version = "0.1.0"
 authors = ["heartsh <heartsh@heartsh.io>"]
-description = "ConsHomfold, which Predicts RNA Single Secondary Structures to Consider Sparse RNA Structural Alignments"
+description = "ConsHomfold, which Predicts Global Single RNA Secondary Structures to Consider Sparse Global Pairwise RNA Structural Alignments"
 repository = "https://github.com/heartsh/conshomfold"
 readme = "README.md"
 keywords = ["bioinformatics", "rna", "secondary-structure"]
