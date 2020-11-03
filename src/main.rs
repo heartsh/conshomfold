@@ -24,7 +24,6 @@ fn main() {
   opts.optopt("", "offset_4_max_gap_num", &format!("An offset for maximum numbers of gaps (Uses {} by default)", DEFAULT_OFFSET_4_MAX_GAP_NUM), "UINT");
   opts.optopt("", "min_pow_of_2", &format!("A minimum power of 2 to calculate a gamma parameter (Uses {} by default)", DEFAULT_MIN_POW_OF_2), "FLOAT");
   opts.optopt("", "max_pow_of_2", &format!("A maximum power of 2 to calculate a gamma parameter (Uses {} by default)", DEFAULT_MAX_POW_OF_2), "FLOAT");
-  opts.optflag("u", "is_posterior_model", "Uses posterior model to score secondary structures (Not recommended due to poor accuracy)");
   opts.optopt("t", "num_of_threads", "The number of threads in multithreading (Uses the number of all the threads of this computer by default)", "UINT");
   opts.optflag("b", "takes_bench", &format!("Compute for only gamma = {} to measure running time", GAMMA_4_BENCH));
   opts.optflag("a", "produces_access_probs", &format!("Also compute accessible probabilities (only for Turner model)"));
@@ -62,9 +61,8 @@ fn main() {
   } else {
     DEFAULT_MAX_POW_OF_2
   };
-  let is_posterior_model = matches.opt_present("u");
   let takes_bench = matches.opt_present("b");
-  let produces_access_probs = matches.opt_present("a") && !is_posterior_model;
+  let produces_access_probs = matches.opt_present("a");
   let outputs_probs = matches.opt_present("p");
   let num_of_threads = if matches.opt_present("t") {
     matches.opt_str("t").unwrap().parse().unwrap()
@@ -73,15 +71,31 @@ fn main() {
   };
   let fasta_file_reader = Reader::from_file(Path::new(&input_file_path)).unwrap();
   let mut fasta_records = FastaRecords::new();
+  let mut max_seq_len = 0;
   for fasta_record in fasta_file_reader.records() {
     let fasta_record = fasta_record.unwrap();
     let mut seq = convert(fasta_record.seq());
     seq.insert(0, PSEUDO_BASE);
     seq.push(PSEUDO_BASE);
+    let seq_len = seq.len();
+    if seq_len > max_seq_len {
+      max_seq_len = seq_len;
+    }
     fasta_records.push(FastaRecord::new(String::from(fasta_record.id()), seq));
   }
   let mut thread_pool = Pool::new(num_of_threads);
-  let prob_mat_sets = consprob(&mut thread_pool, &fasta_records, min_bpp, offset_4_max_gap_num, is_posterior_model, produces_access_probs);
+  if max_seq_len <= u8::MAX as usize {
+    multi_threaded_conshomfold::<u8>(&mut thread_pool, &fasta_records, offset_4_max_gap_num, min_bpp, produces_access_probs, output_dir_path, min_pow_of_2, max_pow_of_2, takes_bench, outputs_probs);
+  } else {
+    multi_threaded_conshomfold::<u16>(&mut thread_pool, &fasta_records, offset_4_max_gap_num, min_bpp, produces_access_probs, output_dir_path, min_pow_of_2, max_pow_of_2, takes_bench, outputs_probs);
+  }
+}
+
+fn multi_threaded_conshomfold<T>(thread_pool: &mut Pool, fasta_records: &FastaRecords, offset_4_max_gap_num: usize, min_bpp: Prob, produces_access_probs: bool, output_dir_path: &Path, min_pow_of_2: i32, max_pow_of_2: i32, takes_bench: bool, outputs_probs: bool)
+where
+  T: Unsigned + PrimInt + Hash + FromPrimitive + Integer + Ord + Display + Sync + Send,
+{
+  let prob_mat_sets = consprob::<T>(thread_pool, &fasta_records, min_bpp, T::from_usize(offset_4_max_gap_num).unwrap(), produces_access_probs);
   if !output_dir_path.exists() {
     let _ = create_dir(output_dir_path);
   }
@@ -93,14 +107,14 @@ fn main() {
       for ((rna_id, fasta_record), mea_ss) in fasta_records.iter().enumerate().zip(mea_sss.iter_mut()) {
         let ref prob_mats = prob_mat_sets[rna_id];
         scope.execute(move || {
-          *mea_ss = conshomfold(&prob_mats.bpp_mat, &prob_mats.upp_mat, fasta_record.seq.len(), GAMMA_4_BENCH);
+          *mea_ss = conshomfold::<T>(&prob_mats.bpp_mat, &prob_mats.upp_mat, fasta_record.seq.len(), GAMMA_4_BENCH);
         });
       }
     });
     let mut buf = String::new();
     let mut writer_2_output_file = BufWriter::new(File::create(output_file_path).unwrap());
     for (rna_id, mea_ss) in mea_sss.iter().enumerate() {
-      let buf_4_rna_id = format!(">{}\n", rna_id) + &unsafe {String::from_utf8_unchecked(get_mea_ss_str(&mea_ss, fasta_records[rna_id].seq.len()))} + if rna_id < num_of_fasta_records - 1 {"\n"} else {""};
+      let buf_4_rna_id = format!(">{}\n", rna_id) + &unsafe {String::from_utf8_unchecked(get_mea_ss_str::<T>(&mea_ss, fasta_records[rna_id].seq.len()))} + if rna_id < num_of_fasta_records - 1 {"\n"} else {""};
       buf.push_str(&buf_4_rna_id);
     }
     let _ = writer_2_output_file.write_all(buf.as_bytes());
@@ -112,34 +126,42 @@ fn main() {
         let ref ref_2_fasta_records = fasta_records;
         let output_file_path = output_dir_path.join(&format!("gamma={}.fa", gamma));
         scope.execute(move || {
-          compute_and_write_mea_sss(ref_2_prob_mat_sets, ref_2_fasta_records, gamma, &output_file_path);
+          compute_and_write_mea_sss::<T>(ref_2_prob_mat_sets, ref_2_fasta_records, gamma, &output_file_path);
         });
       }
     });
   }
   if outputs_probs {
-    write_prob_mat_sets(&output_dir_path, &prob_mat_sets, produces_access_probs);
+    write_prob_mat_sets::<T>(&output_dir_path, &prob_mat_sets, produces_access_probs);
   }
 }
 
-fn compute_and_write_mea_sss(prob_mat_sets: &ProbMatSets, fasta_records: &FastaRecords, gamma: Prob, output_file_path: &Path) {
+fn compute_and_write_mea_sss<T>(prob_mat_sets: &ProbMatSets<T>, fasta_records: &FastaRecords, gamma: Prob, output_file_path: &Path)
+where
+  T: Unsigned + PrimInt + Hash + FromPrimitive + Integer + Ord + Display,
+{
   let num_of_fasta_records = fasta_records.len();
   let mut buf = String::new();
   let mut writer_2_output_file = BufWriter::new(File::create(output_file_path).unwrap());
   for (rna_id, fasta_record) in fasta_records.iter().enumerate() {
     let ref prob_mats = prob_mat_sets[rna_id];
-    let mea_ss = conshomfold(&prob_mats.bpp_mat, &prob_mats.upp_mat, fasta_record.seq.len(), gamma);
-    let buf_4_rna_id = format!(">{}\n", rna_id) + &unsafe {String::from_utf8_unchecked(get_mea_ss_str(&mea_ss, fasta_records[rna_id].seq.len()))} + if rna_id < num_of_fasta_records - 1 {"\n"} else {""};
+    let mea_ss = conshomfold::<T>(&prob_mats.bpp_mat, &prob_mats.upp_mat, fasta_record.seq.len(), gamma);
+    let buf_4_rna_id = format!(">{}\n", rna_id) + &unsafe {String::from_utf8_unchecked(get_mea_ss_str::<T>(&mea_ss, fasta_records[rna_id].seq.len()))} + if rna_id < num_of_fasta_records - 1 {"\n"} else {""};
     buf.push_str(&buf_4_rna_id);
   }
   let _ = writer_2_output_file.write_all(buf.as_bytes());
 }
 
-fn get_mea_ss_str(mea_ss: &MeaSs, seq_len: usize) -> MeaSsStr {
+fn get_mea_ss_str<T>(mea_ss: &MeaSs<T>, seq_len: usize) -> MeaSsStr
+where
+  T: Unsigned + PrimInt + Hash + FromPrimitive + Integer + Ord,
+{
   let mut mea_ss_str = vec![UNPAIRING_BASE; seq_len - 2];
   for &(i, j) in &mea_ss.bp_pos_pairs {
-    mea_ss_str[i as usize - 1] = BASE_PAIRING_LEFT_BASE;
-    mea_ss_str[j as usize - 1] = BASE_PAIRING_RIGHT_BASE;
+    // mea_ss_str[i as usize - 1] = BASE_PAIRING_LEFT_BASE;
+    mea_ss_str[i.to_usize().unwrap() - 1] = BASE_PAIRING_LEFT_BASE;
+    // mea_ss_str[j as usize - 1] = BASE_PAIRING_RIGHT_BASE;
+    mea_ss_str[j.to_usize().unwrap() - 1] = BASE_PAIRING_RIGHT_BASE;
   }
   mea_ss_str
 }

@@ -37,14 +37,14 @@ def main():
   bpp_mat_4_el = utils.get_bpp_mats(asset_dir_path + "/sampled_trnas/bpp_mats_on_el.dat", seq_lens)[0]
   xlabels = [str(i + 1) if (i + 1) % 20 == 0 else "" for i in range(seq_len)]
   (_, axes) = pyplot.subplots(nrows = 1, ncols = 2, figsize = (12, 6))
-  seaborn.heatmap(bpp_mat_on_ss, ax = axes[0], xticklabels = xlabels, yticklabels = xlabels, cbar = False, cmap = cmap)
-  seaborn.heatmap(bpp_mat, ax = axes[1], xticklabels = xlabels, yticklabels = xlabels, cbar = False, cmap = cmap)
+  seaborn.heatmap(bpp_mat_on_ss, ax = axes[0], xticklabels = xlabels, yticklabels = xlabels, cbar = False, cmap = cmap, vmin = 0, vmax = 1)
+  seaborn.heatmap(bpp_mat, ax = axes[1], xticklabels = xlabels, yticklabels = xlabels, cbar = False, cmap = cmap, vmin = 0, vmax = 1)
   pyplot.savefig(image_dir_path + "/trna_bpp_mat_comparison.eps", bbox_inches = "tight")
   pyplot.clf()
   (_, axes) = pyplot.subplots(nrows = 2, ncols = 2, figsize = (12, 12))
-  seaborn.heatmap(access_bpp_mat_4_2l, ax = axes[0][0], xticklabels = xlabels, yticklabels = xlabels, cbar = False, cmap = cmap)
-  seaborn.heatmap(access_bpp_mat_4_ml, ax = axes[0][1], xticklabels = False, yticklabels = False, cbar = False, cmap = cmap)
-  seaborn.heatmap(bpp_mat_4_el, ax = axes[1][0], xticklabels = False, yticklabels = False, cbar = False, cmap = cmap)
+  seaborn.heatmap(access_bpp_mat_4_2l, ax = axes[0][0], xticklabels = xlabels, yticklabels = xlabels, cbar = False, cmap = cmap, vmin = 0, vmax = 1)
+  seaborn.heatmap(access_bpp_mat_4_ml, ax = axes[0][1], xticklabels = False, yticklabels = False, cbar = False, cmap = cmap, vmin = 0, vmax = 1)
+  seaborn.heatmap(bpp_mat_4_el, ax = axes[1][0], xticklabels = False, yticklabels = False, cbar = False, cmap = cmap, vmin = 0, vmax = 1)
   upp_mat_4_hl = utils.get_upp_mats(asset_dir_path + "/sampled_trnas/upp_mats_on_hl.dat", seq_lens)[0]
   upp_mat_4_2l = utils.get_upp_mats(asset_dir_path + "/sampled_trnas/upp_mats_on_2l.dat", seq_lens)[0]
   upp_mat_4_ml = utils.get_upp_mats(asset_dir_path + "/sampled_trnas/upp_mats_on_ml.dat", seq_lens)[0]
