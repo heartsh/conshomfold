@@ -1,6 +1,6 @@
 [package]
 name = "conshomfold"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["heartsh <heartsh@heartsh.io>"]
 description = "ConsHomfold, which Predicts Global Single RNA Secondary Structures to Consider Sparse Global Pairwise RNA Structural Alignments"
 repository = "https://github.com/heartsh/conshomfold"
